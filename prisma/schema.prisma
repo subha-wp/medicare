@@ -28,10 +28,12 @@ model User {
 }
 
 model Session {
-  id        String   @id @unique
+  id        String   @id
   userId    String
   expiresAt DateTime
   user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum UserRole {
@@ -71,16 +73,20 @@ model Doctor {
 }
 
 model Pharmacy {
-  id        String    @id @default(cuid())
-  userId    String    @unique
-  name      String
-  phone     String
-  address   String
-  location  Json      // Stores latitude and longitude
-  user      User      @relation(fields: [userId], references: [id])
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  name          String
+  businessName  String
+  phone         String
+  address       String
+  location      Json      // Stores latitude and longitude
+  gstin         String?
+  tradeLicense  String
+  documents     Json      // Stores document URLs
+  user          User      @relation(fields: [userId], references: [id])
 
-  chambers   Chamber[]
-  appointments Appointment[]
+  chambers      Chamber[]
+  appointments  Appointment[]
 }
 
 model Chamber {

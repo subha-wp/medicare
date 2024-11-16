@@ -1,6 +1,9 @@
+"use server";
+
 import { lucia } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { Argon2id } from "oslo/password";
+import prisma from "@/lib/prisma";
+import { hash } from "@node-rs/argon2";
+import { generateIdFromEntropySize } from "lucia";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -9,9 +12,13 @@ export async function POST(request: Request) {
   const { email, password, role, profile } = formData;
 
   try {
-    // Check if user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: email,
+          mode: "insensitive",
+        },
+      },
     });
 
     if (existingUser) {
@@ -21,21 +28,25 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await new Argon2id().hash(password);
+    const passwordHash = await hash(password, {
+      memoryCost: 19456,
+      timeCost: 2,
+      outputLen: 32,
+      parallelism: 1,
+    });
 
-    // Create user and profile in transaction
+    const userId = generateIdFromEntropySize(10);
+
     const result = await prisma.$transaction(async (tx) => {
-      // Create user
       const user = await tx.user.create({
         data: {
+          id: userId,
           email,
-          hashedPassword,
+          hashedPassword: passwordHash,
           role,
         },
       });
 
-      // Create profile based on role
       switch (role) {
         case "PATIENT":
           await tx.patient.create({
@@ -66,16 +77,19 @@ export async function POST(request: Request) {
       return user;
     });
 
-    // Create session
     const session = await lucia.createSession(result.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+    cookies().set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(
-      { error: "Failed to create account" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

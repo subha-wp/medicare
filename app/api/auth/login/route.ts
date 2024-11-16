@@ -1,6 +1,8 @@
+"use server";
+
 import { lucia } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { Argon2id } from "oslo/password";
+import prisma from "@/lib/prisma";
+import { verify } from "@node-rs/argon2";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -9,21 +11,28 @@ export async function POST(request: Request) {
   const { email, password } = formData;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: email,
+          mode: "insensitive",
+        },
+      },
     });
 
-    if (!user) {
+    if (!existingUser || !existingUser.hashedPassword) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 400 }
       );
     }
 
-    const validPassword = await new Argon2id().verify(
-      user.hashedPassword,
-      password
-    );
+    const validPassword = await verify(existingUser.hashedPassword, password, {
+      memoryCost: 19456,
+      timeCost: 2,
+      outputLen: 32,
+      parallelism: 1,
+    });
 
     if (!validPassword) {
       return NextResponse.json(
@@ -32,15 +41,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = await lucia.createSession(user.id, {});
+    const session = await lucia.createSession(existingUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+    cookies().set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
-      { error: "Failed to login" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }
