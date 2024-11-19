@@ -97,7 +97,8 @@ model Chamber {
   id          String    @id @default(cuid())
   doctorId    String
   pharmacyId  String
-  weekDays    String[]  // Array of days ["MONDAY", "FRIDAY"]
+  weekNumber  String    // "FIRST", "SECOND", "THIRD", "FOURTH", "LAST"
+  weekDay     String    // "MONDAY", "TUESDAY", etc.
   startTime   String    // Format: "HH:mm"
   endTime     String    // Format: "HH:mm"
   fees        Float
