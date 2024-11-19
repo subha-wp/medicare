@@ -1,3 +1,4 @@
+// app/api/doctors/[doctorId]/chambers/route.ts
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";

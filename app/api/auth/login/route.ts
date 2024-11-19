@@ -1,4 +1,3 @@
-// @ts-nocheck
 // app/api/auth/login/route.ts
 import { lucia } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
     const session = await lucia.createSession(existingUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
     const cookieStore = cookies();
-    cookieStore.set(
+    (await cookieStore).set(
       sessionCookie.name,
       sessionCookie.value,
       sessionCookie.attributes

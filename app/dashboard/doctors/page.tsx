@@ -50,8 +50,8 @@ export default async function DoctorsPage() {
                       >
                         <p className="font-medium">{chamber.pharmacy.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {chamber.weekDays.join(", ")} • {chamber.startTime} -{" "}
-                          {chamber.endTime}
+                          {chamber.weekNumber} {chamber.weekDay} •{" "}
+                          {chamber.startTime} - {chamber.endTime}
                         </p>
                         <p className="text-xs">Fees: ₹{chamber.fees}</p>
                       </div>

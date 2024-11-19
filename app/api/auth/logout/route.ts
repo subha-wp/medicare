@@ -1,4 +1,3 @@
-//@ts-nocheck
 // app/api/auth/logout/route.ts
 import { lucia } from "@/lib/auth";
 import { cookies } from "next/headers";
@@ -6,7 +5,8 @@ import { NextResponse } from "next/server";
 
 export async function POST() {
   const cookieStore = cookies();
-  const sessionId = cookieStore.get(lucia.sessionCookieName)?.value ?? null;
+  const sessionId =
+    (await cookieStore).get(lucia.sessionCookieName)?.value ?? null;
 
   if (!sessionId) {
     return NextResponse.json({ error: "No session" }, { status: 401 });
@@ -15,7 +15,7 @@ export async function POST() {
   await lucia.invalidateSession(sessionId);
 
   const sessionCookie = lucia.createBlankSessionCookie();
-  cookieStore.set(
+  (await cookieStore).set(
     sessionCookie.name,
     sessionCookie.value,
     sessionCookie.attributes

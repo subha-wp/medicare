@@ -1,5 +1,4 @@
 // app/dashboard/chambers/page.tsx
-//@ts-nocheck
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
@@ -38,7 +37,7 @@ export default async function ChambersPage() {
               <div className="space-y-2">
                 <p className="font-medium">{chamber.doctor.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {chamber.weekDays.join(", ")}
+                  {chamber.weekNumber} {chamber.weekDay}
                 </p>
                 <p className="text-sm">
                   {chamber.startTime} - {chamber.endTime}

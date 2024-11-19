@@ -1,3 +1,4 @@
+// app/page.tsx
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Stethoscope, Pill, User } from "lucide-react";
