@@ -17,10 +17,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
 const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export default function LoginPage() {
@@ -64,7 +65,9 @@ export default function LoginPage() {
     <div className="container flex items-center justify-center min-h-screen py-8">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Login to MediBook</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Login to MediBook
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -76,7 +79,11 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="Enter your email"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -89,7 +96,11 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input
+                        {...field}
+                        type="password"
+                        placeholder="Enter your password"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -100,6 +111,12 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
+          <div className="mt-4 text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="text-primary hover:underline">
+              Register
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

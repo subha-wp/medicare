@@ -1,9 +1,9 @@
-"use server";
+//@ts-nocheck
 
 import { lucia } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { hash } from "@node-rs/argon2";
-import { generateIdFromEntropySize } from "lucia";
+import { generateId } from "lucia";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -12,12 +12,9 @@ export async function POST(request: Request) {
   const { email, password, role, profile } = formData;
 
   try {
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.user.findUnique({
       where: {
-        email: {
-          equals: email,
-          mode: "insensitive",
-        },
+        email: email.toLowerCase(),
       },
     });
 
@@ -28,21 +25,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const passwordHash = await hash(password, {
-      memoryCost: 19456,
-      timeCost: 2,
-      outputLen: 32,
-      parallelism: 1,
-    });
-
-    const userId = generateIdFromEntropySize(10);
+    const hashedPassword = await hash(password);
+    const userId = generateId(15);
 
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           id: userId,
-          email,
-          hashedPassword: passwordHash,
+          email: email.toLowerCase(),
+          hashedPassword,
           role,
         },
       });

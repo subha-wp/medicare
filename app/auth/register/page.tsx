@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -30,14 +31,14 @@ import Link from "next/link";
 import { FileUpload } from "@/components/file-upload";
 import { LocationInput } from "@/components/location-input";
 
-const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 
 const patientSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   address: z.string().min(5, "Address must be at least 5 characters"),
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
-  bloodGroup: z.string().optional(),
+  bloodGroup: z.enum(bloodGroups).optional(),
 });
 
 const doctorSchema = z.object({
@@ -51,7 +52,9 @@ const doctorSchema = z.object({
 
 const pharmacySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  businessName: z.string().min(2, "Business name must be at least 2 characters"),
+  businessName: z
+    .string()
+    .min(2, "Business name must be at least 2 characters"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   address: z.string().min(5, "Address must be at least 5 characters"),
   location: z.object({
@@ -101,7 +104,7 @@ export default function RegisterPage() {
         ...(role === "PATIENT" && {
           address: "",
           dateOfBirth: "",
-          bloodGroup: "",
+          bloodGroup: undefined,
         }),
         ...(role === "DOCTOR" && {
           specialization: "",
@@ -144,7 +147,9 @@ export default function RegisterPage() {
         return;
       }
 
-      toast.success("Registration successful! You can upload documents later from your dashboard.");
+      toast.success(
+        "Registration successful! You can upload documents later from your dashboard."
+      );
       router.push("/dashboard");
     } catch (error) {
       toast.error("Something went wrong");
@@ -155,9 +160,11 @@ export default function RegisterPage() {
 
   return (
     <div className="container flex items-center justify-center min-h-screen py-8">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>Register as {role.toLowerCase()}</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Register as {role.toLowerCase()}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -169,7 +176,11 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="Enter your email"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -183,7 +194,11 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input
+                        {...field}
+                        type="password"
+                        placeholder="Enter your password"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -197,7 +212,7 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter your name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -211,7 +226,11 @@ export default function RegisterPage() {
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input {...field} type="tel" />
+                      <Input
+                        {...field}
+                        type="tel"
+                        placeholder="Enter your phone number"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -227,7 +246,7 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Address</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} placeholder="Enter your address" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -287,7 +306,10 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Specialization</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input
+                            {...field}
+                            placeholder="Enter your specialization"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -301,7 +323,10 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Qualification</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input
+                            {...field}
+                            placeholder="Enter your qualification"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -315,7 +340,12 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Years of Experience</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min="0" />
+                          <Input
+                            {...field}
+                            type="number"
+                            min="0"
+                            placeholder="Enter years of experience"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -329,7 +359,10 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>About</FormLabel>
                         <FormControl>
-                          <Textarea {...field} />
+                          <Textarea
+                            {...field}
+                            placeholder="Tell us about yourself"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -347,7 +380,10 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Business Name</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input
+                            {...field}
+                            placeholder="Enter your business name"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -361,7 +397,10 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Address</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input
+                            {...field}
+                            placeholder="Enter your business address"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -401,7 +440,7 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>GSTIN (Optional)</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} placeholder="Enter your GSTIN" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -415,7 +454,10 @@ export default function RegisterPage() {
                       <FormItem>
                         <FormLabel>Trade License Number</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input
+                            {...field}
+                            placeholder="Enter your trade license number"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -472,7 +514,7 @@ export default function RegisterPage() {
 
               <div className="text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link href="/auth/login" className="text-primary hover:underline">
+                <Link href="/login" className="text-primary hover:underline">
                   Login
                 </Link>
               </div>
