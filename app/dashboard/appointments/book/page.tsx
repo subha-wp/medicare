@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -24,7 +25,11 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";

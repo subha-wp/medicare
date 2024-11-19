@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 import { lucia } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { verify } from "@node-rs/argon2";
@@ -35,7 +34,8 @@ export async function POST(request: Request) {
 
     const session = await lucia.createSession(existingUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
+    const cookieStore = cookies();
+    cookieStore.set(
       sessionCookie.name,
       sessionCookie.value,
       sessionCookie.attributes
