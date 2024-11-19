@@ -1,4 +1,4 @@
-//@ts-nocheck
+// @ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -14,22 +14,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { FileUpload } from "@/components/file-upload";
-import { LocationInput } from "@/components/location-input";
+import { PatientRegistrationForm } from "@/components/forms/patient-registration-form";
+import { DoctorRegistrationForm } from "@/components/forms/doctor-registration-form";
+import { PharmacyRegistrationForm } from "@/components/forms/pharmacy-registration-form";
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 
@@ -48,6 +40,12 @@ const doctorSchema = z.object({
   qualification: z.string().min(2, "Qualification is required"),
   experience: z.coerce.number().min(0, "Experience must be a positive number"),
   about: z.string().optional(),
+  licenseNo: z.string().min(1, "License number is required"),
+  aadhaarNo: z.string().length(12, "Aadhaar number must be 12 digits"),
+  documents: z.object({
+    licenseDoc: z.string().optional(),
+    aadhaarDoc: z.string().optional(),
+  }),
 });
 
 const pharmacySchema = z.object({
@@ -111,6 +109,12 @@ export default function RegisterPage() {
           qualification: "",
           experience: 0,
           about: "",
+          licenseNo: "",
+          aadhaarNo: "",
+          documents: {
+            licenseDoc: "",
+            aadhaarDoc: "",
+          },
         }),
         ...(role === "PHARMACY" && {
           businessName: "",
@@ -205,308 +209,9 @@ export default function RegisterPage() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="profile.name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter your name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="profile.phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="tel"
-                        placeholder="Enter your phone number"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {role === "PATIENT" && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="profile.address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter your address" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.dateOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date of Birth</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.bloodGroup"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Blood Group</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select blood group" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {bloodGroups.map((group) => (
-                              <SelectItem key={group} value={group}>
-                                {group}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
-
-              {role === "DOCTOR" && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="profile.specialization"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Specialization</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your specialization"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.qualification"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Qualification</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your qualification"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.experience"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Years of Experience</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="0"
-                            placeholder="Enter years of experience"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.about"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>About</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            placeholder="Tell us about yourself"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
-
-              {role === "PHARMACY" && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="profile.businessName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your business name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your business address"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Location</FormLabel>
-                        <FormControl>
-                          <LocationInput
-                            onLocationSelect={(location) => {
-                              form.setValue("profile.location", location, {
-                                shouldValidate: true,
-                              });
-                            }}
-                          />
-                        </FormControl>
-                        {field.value.latitude !== 0 && (
-                          <FormDescription>
-                            Location set: {field.value.latitude.toFixed(6)},{" "}
-                            {field.value.longitude.toFixed(6)}
-                          </FormDescription>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.gstin"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>GSTIN (Optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter your GSTIN" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.tradeLicense"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Trade License Number</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your trade license number"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.documents.tradeLicenseDoc"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Trade License Document (Optional)</FormLabel>
-                        <FormDescription>
-                          You can upload this document later from your dashboard
-                        </FormDescription>
-                        <FormControl>
-                          <FileUpload
-                            onChange={field.onChange}
-                            value={field.value || ""}
-                            label="Trade License"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="profile.documents.gstinDoc"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>GSTIN Document (Optional)</FormLabel>
-                        <FormDescription>
-                          You can upload this document later from your dashboard
-                        </FormDescription>
-                        <FormControl>
-                          <FileUpload
-                            onChange={field.onChange}
-                            value={field.value || ""}
-                            label="GSTIN Document"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
+              {role === "PATIENT" && <PatientRegistrationForm form={form} />}
+              {role === "DOCTOR" && <DoctorRegistrationForm form={form} />}
+              {role === "PHARMACY" && <PharmacyRegistrationForm form={form} />}
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Registering..." : "Register"}

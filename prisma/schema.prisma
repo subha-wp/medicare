@@ -66,6 +66,9 @@ model Doctor {
   qualification String
   experience    Int
   about         String?
+  licenseNo     String    @unique
+  aadhaarNo     String    @unique
+  documents     Json      // Stores document URLs for license and aadhaar
   user          User      @relation(fields: [userId], references: [id])
 
   chambers      Chamber[]
