@@ -1,4 +1,4 @@
-// @ts-nocheck
+// lib/auth.ts
 import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
 import { Lucia, Session, User } from "lucia";
 import { cookies } from "next/headers";
@@ -39,7 +39,8 @@ export const validateRequest = cache(
     { user: User; session: Session } | { user: null; session: null }
   > => {
     const cookieStore = cookies();
-    const sessionId = cookieStore.get(lucia.sessionCookieName)?.value ?? null;
+    const sessionId =
+      (await cookieStore).get(lucia.sessionCookieName)?.value ?? null;
 
     if (!sessionId) {
       return {
@@ -53,15 +54,14 @@ export const validateRequest = cache(
     try {
       if (result.session && result.session.fresh) {
         const sessionCookie = lucia.createSessionCookie(result.session.id);
-        cookieStore.set(
+        (await cookieStore).set(
           sessionCookie.name,
           sessionCookie.value,
           sessionCookie.attributes
         );
-      }
-      if (!result.session) {
+      } else if (!result.session) {
         const sessionCookie = lucia.createBlankSessionCookie();
-        cookieStore.set(
+        (await cookieStore).set(
           sessionCookie.name,
           sessionCookie.value,
           sessionCookie.attributes

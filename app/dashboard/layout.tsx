@@ -1,3 +1,4 @@
+// app/dashboard/layout.tsx
 import { Sidebar } from "@/components/dashboard/sidebar";
 
 export default function DashboardLayout({

@@ -1,3 +1,4 @@
+//app/dashboard/page.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";

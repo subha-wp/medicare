@@ -1,4 +1,5 @@
 //@ts-nocheck
+// app/api/auth/logout/route.ts
 import { lucia } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";

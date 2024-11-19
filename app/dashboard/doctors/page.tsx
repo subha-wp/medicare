@@ -1,3 +1,4 @@
+// app/dashboard/doctors/page.tsx
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
