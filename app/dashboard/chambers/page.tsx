@@ -28,14 +28,19 @@ export default async function ChambersPage() {
         {chambers.map((chamber) => (
           <Card key={chamber.id}>
             <CardHeader>
-              <CardTitle>{chamber.pharmacy.name}</CardTitle>
-              <Badge variant="outline" className="w-fit">
-                {chamber.doctor.specialization}
-              </Badge>
+              <CardTitle>
+                {chamber.pharmacy.businessName}{" "}
+                <span>({chamber.pharmacy.address})</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="font-medium">{chamber.doctor.name}</p>
+                <div className="flex items-center space-x-2">
+                  <p className="font-medium">{chamber.doctor.name}</p>
+                  <Badge variant="outline" className="w-fit">
+                    {chamber.doctor.specialization}
+                  </Badge>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {chamber.weekNumber} {chamber.weekDay}
                 </p>
@@ -85,6 +90,7 @@ async function getChambers(userId: string, role: string) {
         select: {
           name: true,
           address: true,
+          businessName: true,
         },
       },
     },

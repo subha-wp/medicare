@@ -62,7 +62,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container flex items-center justify-center min-h-screen py-8">
+    <div className="flex items-center justify-center min-h-screen p-4 ">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
@@ -113,7 +113,10 @@ export default function LoginPage() {
           </Form>
           <div className="mt-4 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-primary hover:underline">
+            <Link
+              href="/auth/register?role=patient"
+              className="text-primary hover:underline"
+            >
               Register
             </Link>
           </div>
