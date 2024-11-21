@@ -40,11 +40,11 @@ export function ChamberList({ chambers, userRole }: ChamberListProps) {
           <Card key={chamber.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex justify-between items-start">
-                <div>
+                <div className="flex items-center space-x-2">
                   <h3 className="text-lg font-semibold">
                     {chamber.doctor.name}
                   </h3>
-                  <Badge variant="outline" className="mt-1">
+                  <Badge variant="outline" className="">
                     {chamber.doctor.specialization}
                   </Badge>
                 </div>
@@ -59,7 +59,9 @@ export function ChamberList({ chambers, userRole }: ChamberListProps) {
                 <div className="flex items-start space-x-2 text-sm">
                   <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">{chamber.pharmacy.name}</p>
+                    <p className="font-medium">
+                      {chamber.pharmacy.businessName}
+                    </p>
                     <p className="text-muted-foreground">
                       {chamber.pharmacy.address}
                     </p>

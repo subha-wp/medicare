@@ -22,6 +22,7 @@ export default async function ChambersListPage() {
           name: true,
           address: true,
           location: true,
+          businessName: true,
         },
       },
     },
