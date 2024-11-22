@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { lucia } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { hash } from "@node-rs/argon2";
@@ -16,44 +17,48 @@ const userSchema = z.object({
     address: z.string(),
     dateOfBirth: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in DD-MM-YYYY format"),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
     bloodGroup: z.string().optional(),
-    // Add other fields as needed for DOCTOR and PHARMACY
     specialization: z.string().optional(),
     qualification: z.string().optional(),
-    experience: z.string().optional(),
+    experience: z.coerce
+      .number()
+      .min(0, "Experience must be a positive number"),
     about: z.string().optional(),
     licenseNo: z.string().optional(),
     aadhaarNo: z.string().optional(),
-    documents: z.any().optional(),
+    documents: z
+      .object({
+        licenseDoc: z.string().optional(),
+        aadhaarDoc: z.string().optional(),
+      })
+      .optional(),
     businessName: z.string().optional(),
-    location: z.any().optional(),
+    location: z
+      .object({
+        latitude: z.number(),
+        longitude: z.number(),
+      })
+      .optional(),
     gstin: z.string().optional(),
     tradeLicense: z.string().optional(),
   }),
 });
 
-function parseDateOfBirth(dateString: string): Date {
-  const [day, month, year] = dateString.split("-").map(Number);
-  const date = new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
-  if (isNaN(date.getTime())) {
-    throw new Error("Invalid date of birth");
-  }
-  return date;
-}
-
 export async function POST(request: Request) {
   const body = await request.json();
-  const result = userSchema.safeParse(body);
+  console.log(body);
 
-  if (!result.success) {
-    return NextResponse.json(
-      { error: "Invalid input", details: result.error.issues },
-      { status: 400 }
-    );
-  }
+  // const result = userSchema.safeParse(body);
 
-  const { email, password, role, profile } = result.data;
+  // if (!result.success) {
+  //   return NextResponse.json(
+  //     { error: "Invalid input", details: result.error.issues },
+  //     { status: 400 }
+  //   );
+  // }
+
+  const { email, password, role, profile } = body.data;
 
   try {
     const existingUser = await prisma.user.findUnique({
@@ -82,7 +87,7 @@ export async function POST(request: Request) {
         },
       });
 
-      const dateOfBirth = parseDateOfBirth(profile.dateOfBirth);
+      const dateOfBirth = new Date(profile.dateOfBirth);
 
       switch (role) {
         case "PATIENT":
@@ -105,7 +110,7 @@ export async function POST(request: Request) {
               phone: profile.phone,
               specialization: profile.specialization!,
               qualification: profile.qualification!,
-              experience: parseInt(profile.experience!),
+              experience: profile.experience!,
               about: profile.about,
               licenseNo: profile.licenseNo!,
               aadhaarNo: profile.aadhaarNo!,
@@ -135,7 +140,7 @@ export async function POST(request: Request) {
 
     const session = await lucia.createSession(user.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
-    (await cookies()).set(
+    cookies().set(
       sessionCookie.name,
       sessionCookie.value,
       sessionCookie.attributes

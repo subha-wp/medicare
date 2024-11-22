@@ -151,9 +151,7 @@ export default function RegisterPage() {
         return;
       }
 
-      toast.success(
-        "Registration successful! You can upload documents later from your dashboard."
-      );
+      toast.success("Registration successful! You can upload documents later.");
       router.push("/dashboard");
     } catch (error) {
       toast.error("Something went wrong");

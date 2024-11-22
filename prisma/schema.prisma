@@ -12,27 +12,27 @@ datasource db {
 }
 
 model User {
-  id            String    @id @unique
-  email         String    @unique
+  id             String    @id @unique
+  email          String    @unique
   hashedPassword String
-  role          UserRole
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  role           UserRole
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   // Profile relations based on role
-  patient       Patient?
-  doctor        Doctor?
-  pharmacy      Pharmacy?
+  patient        Patient?
+  doctor         Doctor?
+  pharmacy       Pharmacy?
 
   // Auth related fields
-  sessions      Session[]
+  sessions       Session[]
 }
 
 model Session {
   id        String   @id
   userId    String
   expiresAt DateTime
-  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -44,35 +44,35 @@ enum UserRole {
 }
 
 model Patient {
-  id          String    @id @default(cuid())
-  userId      String    @unique
-  name        String
-  phone       String
-  address     String
-  dateOfBirth DateTime
-  bloodGroup  String?
-  user        User      @relation(fields: [userId], references: [id])
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  name           String
+  phone          String
+  address        String
+  dateOfBirth    DateTime
+  bloodGroup     String?
+  user           User      @relation(fields: [userId], references: [id])
   
-  appointments Appointment[]
+  appointments   Appointment[]
   medicalRecords MedicalRecord[]
 }
 
 model Doctor {
-  id            String    @id @default(cuid())
-  userId        String    @unique
-  name          String
-  phone         String
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  name           String
+  phone          String
   specialization String
-  qualification String
-  experience    Int
-  about         String?
-  licenseNo     String    @unique
-  aadhaarNo     String    @unique
-  documents     Json      // Stores document URLs for license and aadhaar
-  user          User      @relation(fields: [userId], references: [id])
+  qualification  String
+  experience     Int
+  about          String?
+  licenseNo      String    @unique
+  aadhaarNo      String    @unique
+  documents      Json      // Stores document URLs for license and aadhaar
+  user           User      @relation(fields: [userId], references: [id])
 
-  chambers      Chamber[]
-  appointments  Appointment[]
+  chambers       Chamber[]
+  appointments   Appointment[]
   medicalRecords MedicalRecord[]
 }
 
@@ -97,8 +97,8 @@ model Chamber {
   id          String    @id @default(cuid())
   doctorId    String
   pharmacyId  String
-  weekNumber  String    // "FIRST", "SECOND", "THIRD", "FOURTH", "LAST"
-  weekDay     String    // "MONDAY", "TUESDAY", etc.
+  weekNumber  WeekNumber
+  weekDay     WeekDay
   startTime   String    // Format: "HH:mm"
   endTime     String    // Format: "HH:mm"
   fees        Float
@@ -110,23 +110,23 @@ model Chamber {
 }
 
 model Appointment {
-  id          String    @id @default(cuid())
-  patientId   String
-  doctorId    String
-  pharmacyId  String
-  chamberId   String
-  date        DateTime
-  status      AppointmentStatus @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
-  paymentMethod PaymentMethod
-  amount      Float
-  createdAt   DateTime  @default(now())
+  id             String    @id @default(cuid())
+  patientId      String
+  doctorId       String
+  pharmacyId     String
+  chamberId      String
+  date           DateTime
+  status         AppointmentStatus @default(PENDING)
+  paymentStatus  PaymentStatus @default(PENDING)
+  paymentMethod  PaymentMethod
+  amount         Float
+  createdAt      DateTime  @default(now())
 
-  patient     Patient   @relation(fields: [patientId], references: [id])
-  doctor      Doctor    @relation(fields: [doctorId], references: [id])
-  pharmacy    Pharmacy  @relation(fields: [pharmacyId], references: [id])
-  chamber     Chamber   @relation(fields: [chamberId], references: [id])
-  medicalRecord MedicalRecord?
+  patient        Patient   @relation(fields: [patientId], references: [id])
+  doctor         Doctor    @relation(fields: [doctorId], references: [id])
+  pharmacy       Pharmacy  @relation(fields: [pharmacyId], references: [id])
+  chamber        Chamber   @relation(fields: [chamberId], references: [id])
+  medicalRecord  MedicalRecord?
 }
 
 model MedicalRecord {
@@ -140,8 +140,8 @@ model MedicalRecord {
   createdAt     DateTime  @default(now())
 
   appointment   Appointment @relation(fields: [appointmentId], references: [id])
-  patient      Patient    @relation(fields: [patientId], references: [id])
-  doctor       Doctor     @relation(fields: [doctorId], references: [id])
+  patient       Patient    @relation(fields: [patientId], references: [id])
+  doctor        Doctor     @relation(fields: [doctorId], references: [id])
 }
 
 enum AppointmentStatus {
@@ -161,3 +161,22 @@ enum PaymentMethod {
   ONLINE
   CASH
 }
+
+enum WeekNumber {
+  FIRST
+  SECOND
+  THIRD
+  FOURTH
+  LAST
+}
+
+enum WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
