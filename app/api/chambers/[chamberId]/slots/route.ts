@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+interface Slot {
+  slotNumber: number;
+  startTime: string;
+  endTime: string;
+}
+
+interface RouteParams {
+  params: {
+    chamberId: string;
+  };
+}
+
 export async function GET(
   request: Request,
-  { params }: { params: { chamberId: string } }
-) {
+  { params }: RouteParams
+): Promise<NextResponse<{ slots: Slot[] } | { error: string }>> {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
 
@@ -43,7 +55,7 @@ export async function GET(
     const endTime = new Date(appointmentDate);
     endTime.setHours(endHour, endMinute, 0, 0);
 
-    const availableSlots = [];
+    const availableSlots: Slot[] = [];
     let currentSlot = 1;
     let currentTime = new Date(startTime);
 
