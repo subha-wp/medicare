@@ -1,18 +1,42 @@
 // app/api/appointments/route.ts
+import { NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const appointmentSchema = z.object({
+  chamberId: z.string().cuid(),
+  date: z.string().datetime(),
+  slotNumber: z.number().int().positive(),
+});
 
 export async function POST(request: Request) {
   const { user } = await validateRequest();
-
-  if (!user || user.role !== "PATIENT") {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (user.role !== "PATIENT") {
+    return NextResponse.json(
+      { error: "Only patients can book appointments" },
+      { status: 403 }
+    );
+  }
+
+  const body = await request.json();
+  const result = appointmentSchema.safeParse(body);
+
+  if (!result.success) {
+    return NextResponse.json(
+      { error: "Invalid input", details: result.error.issues },
+      { status: 400 }
+    );
+  }
+
+  const { chamberId, date, slotNumber } = result.data;
+
   try {
-    const data = await request.json();
-    const patient = await prisma.patient.findFirst({
+    const patient = await prisma.patient.findUnique({
       where: { userId: user.id },
     });
 
@@ -24,31 +48,27 @@ export async function POST(request: Request) {
     }
 
     const chamber = await prisma.chamber.findUnique({
-      where: { id: data.chamberId },
-      include: {
-        doctor: true,
-        pharmacy: true,
-      },
+      where: { id: chamberId },
+      include: { doctor: true, pharmacy: true },
     });
 
     if (!chamber) {
       return NextResponse.json({ error: "Chamber not found" }, { status: 404 });
     }
 
-    // Check if the appointment slot is available
+    // Check if the slot is available
     const existingAppointment = await prisma.appointment.findFirst({
       where: {
-        chamberId: data.chamberId,
-        date: data.date,
-        NOT: {
-          status: "CANCELLED",
-        },
+        chamberId,
+        date,
+        slotNumber,
+        status: { not: "CANCELLED" },
       },
     });
 
     if (existingAppointment) {
       return NextResponse.json(
-        { error: "This time slot is already booked" },
+        { error: "This slot is already booked" },
         { status: 400 }
       );
     }
@@ -58,117 +78,21 @@ export async function POST(request: Request) {
         patientId: patient.id,
         doctorId: chamber.doctorId,
         pharmacyId: chamber.pharmacyId,
-        chamberId: chamber.id,
-        date: data.date,
-        paymentMethod: data.paymentMethod,
+        chamberId,
+        date,
+        slotNumber,
+        status: "PENDING",
+        paymentStatus: "PENDING",
+        paymentMethod: "ONLINE", // You might want to make this configurable
         amount: chamber.fees,
       },
     });
 
-    return NextResponse.json(appointment);
+    return NextResponse.json({ success: true, appointmentId: appointment.id });
   } catch (error) {
-    console.error("Error creating appointment:", error);
+    console.error("Appointment booking error:", error);
     return NextResponse.json(
-      { error: "Failed to create appointment" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: Request) {
-  const { user } = await validateRequest();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    let appointments;
-    switch (user.role) {
-      case "PATIENT":
-        const patient = await prisma.patient.findFirst({
-          where: { userId: user.id },
-        });
-        appointments = await prisma.appointment.findMany({
-          where: { patientId: patient?.id },
-          include: {
-            doctor: {
-              select: {
-                name: true,
-                specialization: true,
-              },
-            },
-            pharmacy: {
-              select: {
-                name: true,
-                address: true,
-              },
-            },
-            chamber: true,
-            medicalRecord: true,
-          },
-          orderBy: { date: "desc" },
-        });
-        break;
-
-      case "DOCTOR":
-        const doctor = await prisma.doctor.findFirst({
-          where: { userId: user.id },
-        });
-        appointments = await prisma.appointment.findMany({
-          where: { doctorId: doctor?.id },
-          include: {
-            patient: {
-              select: {
-                name: true,
-                phone: true,
-                bloodGroup: true,
-              },
-            },
-            pharmacy: {
-              select: {
-                name: true,
-                address: true,
-              },
-            },
-            chamber: true,
-            medicalRecord: true,
-          },
-          orderBy: { date: "desc" },
-        });
-        break;
-
-      case "PHARMACY":
-        const pharmacy = await prisma.pharmacy.findFirst({
-          where: { userId: user.id },
-        });
-        appointments = await prisma.appointment.findMany({
-          where: { pharmacyId: pharmacy?.id },
-          include: {
-            patient: {
-              select: {
-                name: true,
-                phone: true,
-              },
-            },
-            doctor: {
-              select: {
-                name: true,
-                specialization: true,
-              },
-            },
-            chamber: true,
-          },
-          orderBy: { date: "desc" },
-        });
-        break;
-    }
-
-    return NextResponse.json(appointments);
-  } catch (error) {
-    console.error("Error fetching appointments:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch appointments" },
+      { error: "Failed to book appointment" },
       { status: 500 }
     );
   }

@@ -24,7 +24,7 @@ export function BottomNav({ userRole }: BottomNavProps) {
     { href: "/dashboard/appointments", icon: Calendar, label: "Appointments" },
     ...(userRole === "PATIENT"
       ? [
-          { href: "/dashboard/doctors", icon: Users, label: "Doctors" },
+          { href: "/dashboard/chambers/list", icon: Users, label: "Chambers" },
           {
             href: "/dashboard/medical-reports",
             icon: FileText,

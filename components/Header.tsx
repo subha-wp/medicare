@@ -43,13 +43,13 @@ export function Header({ user }: HeaderProps) {
 
     switch (user.role) {
       case "PHARMACY":
-        return `Welcome, ${userInfo.businessName}`;
+        return `Hi, ${userInfo.businessName}`;
       case "DOCTOR":
-        return `Welcome, Dr. ${userInfo.name}`;
+        return `Hi, Dr. ${userInfo.name}`;
       case "PATIENT":
-        return `Welcome, ${userInfo.name}`;
+        return `Hi, ${userInfo.name}`;
       default:
-        return "Welcome";
+        return "";
     }
   };
 

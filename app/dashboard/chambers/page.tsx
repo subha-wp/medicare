@@ -15,7 +15,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 type Chamber = {
@@ -31,6 +30,14 @@ type Chamber = {
     specialization: string;
   };
 };
+
+function formatTime(time: string): string {
+  const [hours, minutes] = time.split(":");
+  const hoursNum = parseInt(hours, 10);
+  const ampm = hoursNum >= 12 ? "PM" : "AM";
+  const formattedHours = hoursNum % 12 || 12;
+  return `${formattedHours}:${minutes} ${ampm}`;
+}
 
 export default function ChambersPage() {
   const [chambers, setChambers] = useState<Chamber[]>([]);
@@ -150,7 +157,8 @@ export default function ChambersPage() {
                   {chamber.weekNumber} {chamber.weekDay}
                 </p>
                 <p className="text-sm">
-                  {chamber.startTime} - {chamber.endTime}
+                  {formatTime(chamber.startTime)} -{" "}
+                  {formatTime(chamber.endTime)}
                 </p>
                 <p className="text-sm font-medium">Fees: ₹{chamber.fees}</p>
                 <div className="flex justify-between">

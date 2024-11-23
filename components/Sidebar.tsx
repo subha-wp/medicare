@@ -33,6 +33,12 @@ interface SidebarItem {
 const sidebarItems: SidebarItem[] = [
   { title: "Dashboard", icon: Home, href: "/dashboard", role: "ALL" },
   {
+    title: "Chambers",
+    icon: Building,
+    href: "/dashboard/chambers/list",
+    role: "PATIENT",
+  },
+  {
     title: "Appointments",
     icon: Calendar,
     href: "/dashboard/appointments",
@@ -50,6 +56,7 @@ const sidebarItems: SidebarItem[] = [
     href: "/dashboard/medical-reports",
     role: "PATIENT",
   },
+
   {
     title: "Chambers",
     icon: Building,
