@@ -35,6 +35,102 @@ const chamberSchema = z.object({
   maxSlots: z.coerce.number().min(1, "At least one slot is required"),
 });
 
+export async function GET(request: Request) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const pharmacy = await prisma.pharmacy.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!pharmacy) {
+      return NextResponse.json(
+        { error: "Pharmacy not found" },
+        { status: 404 }
+      );
+    }
+
+    const chambers = await prisma.chamber.findMany({
+      where: { pharmacyId: pharmacy.id },
+      include: {
+        doctor: {
+          select: {
+            name: true,
+            specialization: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ chambers });
+  } catch (error) {
+    console.error("Error fetching chambers:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch chambers" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  const { user } = await validateRequest();
+  if (!user || user.role !== "PHARMACY") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { chamberId, isActive } = body;
+
+  try {
+    const updatedChamber = await prisma.chamber.update({
+      where: { id: chamberId },
+      data: { isActive },
+    });
+
+    return NextResponse.json({ success: true, chamber: updatedChamber });
+  } catch (error) {
+    console.error("Chamber update error:", error);
+    return NextResponse.json(
+      { error: "Failed to update chamber" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  const { user } = await validateRequest();
+  if (!user || user.role !== "PHARMACY") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const chamberId = searchParams.get("id");
+
+  if (!chamberId) {
+    return NextResponse.json(
+      { error: "Chamber ID is required" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await prisma.chamber.delete({
+      where: { id: chamberId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Chamber deletion error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete chamber" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   const { user } = await validateRequest();
   if (!user) {

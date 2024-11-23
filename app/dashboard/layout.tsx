@@ -21,23 +21,19 @@ export default async function RootLayout({
   const { user } = await validateRequest();
 
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="flex h-screen">
-          {user && (
-            <aside className="w-64 bg-gray-100 border-r hidden md:block">
-              <Sidebar user={user} />
-            </aside>
-          )}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {user && <Header user={user} />}
-            <main className="flex-1 overflow-y-auto p-4 md:p-8">
-              {children}
-            </main>
-            {user && <BottomNav userRole={user.role} />}
-          </div>
+    <div className={inter.className}>
+      <div className="flex h-screen">
+        {user && (
+          <aside className="w-64 bg-gray-100 border-r hidden md:block">
+            <Sidebar user={user} />
+          </aside>
+        )}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {user && <Header user={user} />}
+          <main className="flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
+          {user && <BottomNav userRole={user.role} />}
         </div>
-      </body>
-    </html>
+      </div>
+    </div>
   );
 }

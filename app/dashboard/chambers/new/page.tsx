@@ -1,7 +1,6 @@
-// @ts-nocheck
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -27,19 +26,6 @@ import {
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Loader2 } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 const weekNumbers = ["FIRST", "SECOND", "THIRD", "FOURTH", "LAST"] as const;
 const weekDays = [
@@ -65,17 +51,7 @@ const chamberSchema = z.object({
     .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format"),
   endTime: z
     .string()
-    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format")
-    .refine(
-      (endTime, ctx) => {
-        const start = ctx.parent.startTime;
-        if (!start) return true;
-        return endTime > start;
-      },
-      {
-        message: "End time must be after start time",
-      }
-    ),
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format"),
   fees: z.coerce
     .number()
     .min(0, "Fees must be a positive number")
@@ -101,7 +77,6 @@ export default function NewChamberPage() {
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const form = useForm<z.infer<typeof chamberSchema>>({
@@ -118,6 +93,13 @@ export default function NewChamberPage() {
     },
   });
 
+  useEffect(() => {
+    const subscription = form.watch((value, { name, type }) =>
+      console.log(name, value, type)
+    );
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const searchDoctors = async (query: string) => {
     setSearchQuery(query);
     if (!query || query.length < 2) {
@@ -130,33 +112,54 @@ export default function NewChamberPage() {
       const response = await fetch(
         `/api/doctors/search?q=${encodeURIComponent(query)}`
       );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
       const data = await response.json();
 
       if (data.error) {
         toast.error(data.error);
+        setDoctors([]);
         return;
       }
 
-      setDoctors(data.doctors || []);
+      setDoctors(Array.isArray(data.doctors) ? data.doctors : []);
     } catch (error) {
-      toast.error("Failed to search doctors");
+      console.error("Error searching doctors:", error);
+      toast.error("Failed to search doctors. Please try again.");
+      setDoctors([]);
     } finally {
       setSearchLoading(false);
     }
   };
 
   async function onSubmit(values: z.infer<typeof chamberSchema>) {
+    console.log("Form submitted with values:", values);
+
+    if (!form.formState.isValid) {
+      console.error("Form is not valid:", form.formState.errors);
+      toast.error("Please fill all required fields correctly");
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log("Sending request to create chamber...");
       const response = await fetch("/api/chambers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log("Response from server:", data);
 
       if (data.error) {
+        console.error("Server returned an error:", data.error);
         toast.error(data.error);
         return;
       }
@@ -164,7 +167,8 @@ export default function NewChamberPage() {
       toast.success("Chamber created successfully!");
       router.push("/dashboard/chambers");
     } catch (error) {
-      toast.error("Failed to create chamber");
+      console.error("Error creating chamber:", error);
+      toast.error("Failed to create chamber. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -183,70 +187,41 @@ export default function NewChamberPage() {
                 control={form.control}
                 name="doctorId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem>
                     <FormLabel>Doctor</FormLabel>
-                    <Popover open={open} onOpenChange={setOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={open}
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          placeholder="Search for a doctor..."
+                          value={searchQuery}
+                          onChange={(e) => searchDoctors(e.target.value)}
+                        />
+                        {searchLoading && (
+                          <Loader2 className="absolute right-2 top-2 h-4 w-4 animate-spin" />
+                        )}
+                      </div>
+                    </FormControl>
+                    {doctors.length > 0 && (
+                      <ul className="mt-2 max-h-60 overflow-auto border rounded-md">
+                        {doctors.map((doctor) => (
+                          <li
+                            key={doctor.id}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              form.setValue("doctorId", doctor.id);
+                              setSearchQuery(doctor.name);
+                              setDoctors([]);
+                            }}
                           >
-                            {field.value
-                              ? doctors.find(
-                                  (doctor) => doctor.id === field.value
-                                )?.name
-                              : "Select a doctor"}
-                            <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search doctors..."
-                            value={searchQuery}
-                            onValueChange={searchDoctors}
-                          />
-                          <CommandEmpty>
-                            {searchQuery.length > 0
-                              ? "No doctors found"
-                              : "Type to search doctors"}
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {searchLoading ? (
-                              <div className="flex items-center justify-center p-4">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              </div>
-                            ) : (
-                              doctors.map((doctor) => (
-                                <CommandItem
-                                  key={doctor.id}
-                                  value={doctor.name}
-                                  onSelect={() => {
-                                    form.setValue("doctorId", doctor.id);
-                                    setSearchQuery(doctor.name);
-                                    setOpen(false);
-                                  }}
-                                >
-                                  <div className="flex flex-col">
-                                    <span>{doctor.name}</span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {doctor.specialization}
-                                    </span>
-                                  </div>
-                                </CommandItem>
-                              ))
-                            )}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                            <div>{doctor.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {doctor.specialization}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <FormDescription>
                       Search for a doctor by name or specialization
                     </FormDescription>
@@ -408,7 +383,24 @@ export default function NewChamberPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={
+                  loading ||
+                  !form.formState.isValid ||
+                  Object.values(form.getValues()).some((value) => value === "")
+                }
+                onClick={() => {
+                  console.log(
+                    "Form values before submission:",
+                    form.getValues()
+                  );
+                  if (!form.formState.isValid) {
+                    console.log("Form errors:", form.formState.errors);
+                  }
+                }}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
