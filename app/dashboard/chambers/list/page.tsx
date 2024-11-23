@@ -83,7 +83,7 @@ export default async function ChambersListPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-20">
       <h2 className="text-2xl font-bold tracking-tight">Available Chambers</h2>
       <ChamberList chambers={chambers} userRole={user.role} />
     </div>
