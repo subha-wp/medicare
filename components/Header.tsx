@@ -24,10 +24,14 @@ export function Header({ user }: HeaderProps) {
 
   useEffect(() => {
     const fetchUserInfo = async () => {
-      const response = await fetch("/api/user-info");
-      if (response.ok) {
-        const data = await response.json();
-        setUserInfo(data);
+      try {
+        const response = await fetch("/api/user-info");
+        if (response.ok) {
+          const data = await response.json();
+          setUserInfo(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user info:", error);
       }
     };
 
@@ -50,19 +54,27 @@ export function Header({ user }: HeaderProps) {
   };
 
   const handleLogout = async () => {
-    await logout();
-    router.push("/auth/login");
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      if (response.ok) {
+        router.push("/auth/login");
+      } else {
+        console.error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
     <header className="sticky top-0 z-50 px-2 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
-        <div className=" flex">
+        <div className="flex">
           <h1 className="text-lg font-semibold">{getGreeting()}</h1>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className=" h-4 w-4" />
+            <LogOut className="h-4 w-4 mr-2" />
             Log out
           </Button>
         </div>

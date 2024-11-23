@@ -1,15 +1,8 @@
-"use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormControl,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -23,15 +16,7 @@ import {
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 
-const patientSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  address: z.string().min(5, "Address must be at least 5 characters"),
-  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
-  bloodGroup: z.enum(bloodGroups).optional(),
-});
-
-export function PatientRegistrationForm({ form }: { form: any }) {
+export function PatientRegistrationForm({ form }) {
   return (
     <>
       <FormField
@@ -41,13 +26,12 @@ export function PatientRegistrationForm({ form }: { form: any }) {
           <FormItem>
             <FormLabel>Name</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Enter your name" />
+              <Input {...field} placeholder="Enter your full name" />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-
       <FormField
         control={form.control}
         name="profile.phone"
@@ -55,17 +39,12 @@ export function PatientRegistrationForm({ form }: { form: any }) {
           <FormItem>
             <FormLabel>Phone</FormLabel>
             <FormControl>
-              <Input
-                {...field}
-                type="tel"
-                placeholder="Enter your phone number"
-              />
+              <Input {...field} placeholder="Enter your phone number" />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-
       <FormField
         control={form.control}
         name="profile.address"
@@ -79,7 +58,6 @@ export function PatientRegistrationForm({ form }: { form: any }) {
           </FormItem>
         )}
       />
-
       <FormField
         control={form.control}
         name="profile.dateOfBirth"
@@ -87,13 +65,12 @@ export function PatientRegistrationForm({ form }: { form: any }) {
           <FormItem>
             <FormLabel>Date of Birth</FormLabel>
             <FormControl>
-              <Input {...field} type="date" />
+              <Input {...field} placeholder="DD-MM-YYYY" />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-
       <FormField
         control={form.control}
         name="profile.bloodGroup"
@@ -103,7 +80,7 @@ export function PatientRegistrationForm({ form }: { form: any }) {
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select blood group" />
+                  <SelectValue placeholder="Select your blood group" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
