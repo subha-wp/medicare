@@ -1,3 +1,4 @@
+// components/file-upload.tsx
 "use client";
 
 import { CldUploadWidget } from "next-cloudinary";

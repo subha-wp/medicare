@@ -64,6 +64,7 @@ model Doctor {
   phone          String
   specialization String
   qualification  String
+  address       String
   experience     Int
   about          String?
   licenseNo      String    @unique
@@ -103,6 +104,8 @@ model Chamber {
   endTime     String    // Format: "HH:mm"
   fees        Float
   isActive    Boolean   @default(true)
+  slotDuration Int      // Duration of each slot in minutes
+  maxSlots    Int       // Maximum number of slots per chamber session
 
   doctor      Doctor    @relation(fields: [doctorId], references: [id])
   pharmacy    Pharmacy  @relation(fields: [pharmacyId], references: [id])
@@ -116,6 +119,7 @@ model Appointment {
   pharmacyId     String
   chamberId      String
   date           DateTime
+  slotNumber     Int       // New field to represent the slot number
   status         AppointmentStatus @default(PENDING)
   paymentStatus  PaymentStatus @default(PENDING)
   paymentMethod  PaymentMethod

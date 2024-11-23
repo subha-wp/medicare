@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FileUpload } from "@/components/file-upload";
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 
@@ -50,8 +51,8 @@ const doctorSchema = baseProfileSchema.extend({
   licenseNo: z.string().min(1, "License number is required"),
   aadhaarNo: z.string().length(12, "Aadhaar number must be 12 digits"),
   documents: z.object({
-    licenseDoc: z.string().optional(),
-    aadhaarDoc: z.string().optional(),
+    licenseDoc: z.string().min(1, "License document is required"),
+    aadhaarDoc: z.string().min(1, "Aadhaar document is required"),
   }),
 });
 
@@ -66,9 +67,8 @@ const pharmacySchema = baseProfileSchema.extend({
   gstin: z.string().optional(),
   tradeLicense: z.string().min(1, "Trade license is required"),
   documents: z.object({
-    tradeLicenseDoc: z.string().optional(),
+    tradeLicenseDoc: z.string().min(1, "Trade license document is required"),
     gstinDoc: z.string().optional(),
-    otherDocs: z.array(z.string()).optional(),
   }),
 });
 
@@ -117,7 +117,6 @@ export default function RegisterPage() {
           aadhaarDoc: "",
           tradeLicenseDoc: "",
           gstinDoc: "",
-          otherDocs: [],
         },
         businessName: "",
         location: {
@@ -146,7 +145,7 @@ export default function RegisterPage() {
         return;
       }
 
-      toast.success("Registration successful! You can upload documents later.");
+      toast.success("Registration successful!");
       router.push("/dashboard");
     } catch (error) {
       toast.error("Something went wrong");
@@ -394,6 +393,42 @@ export default function RegisterPage() {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="profile.documents.licenseDoc"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>License Document</FormLabel>
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="License Document"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="profile.documents.aadhaarDoc"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Aadhaar Document</FormLabel>
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="Aadhaar Document"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </>
               )}
 
@@ -478,6 +513,42 @@ export default function RegisterPage() {
                           <Input
                             {...field}
                             placeholder="Enter your trade license number"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="profile.documents.tradeLicenseDoc"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Trade License Document</FormLabel>
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="Trade License Document"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="profile.documents.gstinDoc"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>GSTIN Document</FormLabel>
+                        <FormControl>
+                          <FileUpload
+                            value={field.value}
+                            onChange={field.onChange}
+                            label="GSTIN Document"
                           />
                         </FormControl>
                         <FormMessage />
