@@ -80,7 +80,11 @@ const baseSchema = z.object({
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const role = searchParams.get("role")?.toUpperCase() || "PATIENT";
+  const role = (searchParams.get("role")?.toUpperCase() ?? "PATIENT") as
+    | "PATIENT"
+    | "DOCTOR"
+    | "PHARMACY";
+
   const [loading, setLoading] = useState(false);
 
   let schema;
