@@ -137,11 +137,17 @@ export default function RegisterForm() {
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       setLoading(true);
+      //   console.log("Submitting form with values:", values); // Debug log
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...values, role }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Registration failed");
+      }
 
       const data = await response.json();
 
@@ -153,7 +159,8 @@ export default function RegisterForm() {
       toast.success("Registration successful!");
       router.push("/dashboard");
     } catch (error) {
-      toast.error("Something went wrong");
+      console.error("Registration error:", error);
+      toast.error(error.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -326,6 +333,20 @@ export default function RegisterForm() {
                             {...field}
                             placeholder="Enter your phone number"
                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="profile.address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter your address" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
