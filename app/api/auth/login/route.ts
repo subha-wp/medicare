@@ -6,10 +6,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const formData = await request.json();
-  const { email, password } = formData;
-
   try {
+    const formData = await request.json();
+    const { email, password } = formData;
+
     const existingUser = await prisma.user.findUnique({
       where: {
         email: email.toLowerCase(),
@@ -34,14 +34,31 @@ export async function POST(request: Request) {
 
     const session = await lucia.createSession(existingUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
-    const cookieStore = cookies();
-    (await cookieStore).set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes
-    );
 
-    return NextResponse.json({ success: true });
+    // Set cookie with explicit attributes
+    (
+      await // Set cookie with explicit attributes
+      cookies()
+    ).set(sessionCookie.name, sessionCookie.value, {
+      ...sessionCookie.attributes,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      httpOnly: true,
+      path: "/",
+    });
+
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          "Set-Cookie": `${sessionCookie.name}=${
+            sessionCookie.value
+          }; ${Object.entries(sessionCookie.attributes)
+            .map(([key, value]) => `${key}=${value}`)
+            .join("; ")}`,
+        },
+      }
+    );
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
