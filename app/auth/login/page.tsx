@@ -55,7 +55,7 @@ export default function LoginPage() {
       toast.success("Login successful!");
       router.push("/dashboard");
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error("Something went wrong client");
     } finally {
       setLoading(false);
     }
