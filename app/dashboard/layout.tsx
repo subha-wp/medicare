@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/bottom-nav";
 import SessionProvider from "./SessionProvider";
+import { redirect } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
