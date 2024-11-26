@@ -4,8 +4,10 @@ import prisma from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params: { chamberId } }: { params: { chamberId: string } }
+  { params }: { params: Promise<{ chamberId: string }> }
 ) {
+  const { chamberId } = await params;
+
   const { user } = await validateRequest();
   if (!user) {
     console.log("Unauthorized access attempt");
