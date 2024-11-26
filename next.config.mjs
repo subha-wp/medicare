@@ -2,7 +2,10 @@
 const nextConfig = {
   experimental: {
     serverActions: {
-      allowedOrigins: ["localhost:3000"],
+      allowedOrigins: [
+        "localhost:3000",
+        process.env.NEXT_PUBLIC_PRODUCTION_URL, // Make sure to set this environment variable
+      ].filter(Boolean), // This removes any falsy values from the array
     },
   },
   serverExternalPackages: ["@node-rs/argon2"],
@@ -15,8 +18,11 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer, webpack }) => {
-    if (isServer) {
-      config.externals.push("@node-rs/argon2");
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        argon2: false,
+      };
     }
     return config;
   },
