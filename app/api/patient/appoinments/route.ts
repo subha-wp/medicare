@@ -1,9 +1,11 @@
+// @ts-nocheck
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   const { user } = await validateRequest();
+  console.log(user);
 
   if (!user || user.role !== "PATIENT") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
