@@ -9,11 +9,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "sonner";
-import { format, addDays, isSameDay } from "date-fns";
+import { format, addDays, isSameDay, getDate } from "date-fns";
 
 type Chamber = {
   id: string;
-  weekNumber: string;
+  weekNumber: "FIRST" | "SECOND" | "THIRD" | "FOURTH" | "LAST";
   weekDay: string;
   startTime: string;
   endTime: string;
@@ -45,6 +45,50 @@ const weekDays = {
   SUNDAY: 0,
 };
 
+function getWeekNumberOfMonth(
+  date: Date
+): "FIRST" | "SECOND" | "THIRD" | "FOURTH" | "LAST" {
+  const dayOfMonth = getDate(date);
+
+  if (dayOfMonth <= 7) return "FIRST";
+  if (dayOfMonth <= 14) return "SECOND";
+  if (dayOfMonth <= 21) return "THIRD";
+  if (dayOfMonth <= 28) return "FOURTH";
+  return "LAST";
+}
+
+function getNextValidDate(chamber: Chamber): Date {
+  const today = new Date();
+  const targetDay = weekDays[chamber.weekDay as keyof typeof weekDays];
+  let nextDate = today;
+
+  // Find the next occurrence of the weekday
+  while (nextDate.getDay() !== targetDay) {
+    nextDate = addDays(nextDate, 1);
+  }
+
+  // Keep adding weeks until we find a date that matches both weekday and week number
+  while (getWeekNumberOfMonth(nextDate) !== chamber.weekNumber) {
+    nextDate = addDays(nextDate, 7);
+  }
+
+  // If today is the target day but it's past the chamber time, move to next occurrence
+  if (isSameDay(today, nextDate)) {
+    const [hours, minutes] = chamber.startTime.split(":");
+    const chamberTime = new Date(nextDate);
+    chamberTime.setHours(parseInt(hours), parseInt(minutes), 0);
+
+    if (today > chamberTime) {
+      // Add weeks until we find the next valid occurrence
+      do {
+        nextDate = addDays(nextDate, 7);
+      } while (getWeekNumberOfMonth(nextDate) !== chamber.weekNumber);
+    }
+  }
+
+  return nextDate;
+}
+
 export function AppointmentDrawer({
   chamber,
   open,
@@ -57,33 +101,11 @@ export function AppointmentDrawer({
 
   if (!chamber) return null;
 
-  const getNextAppointmentDate = () => {
-    const today = new Date();
-    const targetDay = weekDays[chamber.weekDay as keyof typeof weekDays];
-    let nextDate = today;
-
-    while (nextDate.getDay() !== targetDay) {
-      nextDate = addDays(nextDate, 1);
-    }
-
-    // If today is the target day but it's past the chamber time, move to next week
-    if (isSameDay(today, nextDate)) {
-      const [hours, minutes] = chamber.startTime.split(":");
-      const chamberTime = new Date(nextDate);
-      chamberTime.setHours(parseInt(hours), parseInt(minutes), 0);
-
-      if (today > chamberTime) {
-        nextDate = addDays(nextDate, 7);
-      }
-    }
-
-    return nextDate;
-  };
+  const appointmentDate = getNextValidDate(chamber);
 
   const handleBookAppointment = async () => {
     try {
       setLoading(true);
-      const appointmentDate = getNextAppointmentDate();
 
       const response = await fetch("/api/appointments", {
         method: "POST",
@@ -140,7 +162,13 @@ export function AppointmentDrawer({
               <div>
                 <h4 className="font-medium">Schedule</h4>
                 <p className="text-sm text-muted-foreground">
-                  Next available: {format(getNextAppointmentDate(), "PPP")}
+                  {chamber.weekNumber.charAt(0) +
+                    chamber.weekNumber.slice(1).toLowerCase()}{" "}
+                  {chamber.weekDay.charAt(0) +
+                    chamber.weekDay.slice(1).toLowerCase()}{" "}
+                  of every month
+                  <br />
+                  Next available: {format(appointmentDate, "PPP")}
                   <br />
                   Time: {chamber.startTime} - {chamber.endTime}
                 </p>
