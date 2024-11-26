@@ -1,7 +1,6 @@
-// app/auth/register/page.tsx
 import { Suspense } from "react";
-import RegisterForm from "./register-form";
 import { Loader2 } from "lucide-react";
+import RegisterForm from "./RegisterForm";
 
 export default function RegisterPage() {
   return (

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -18,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { login } from "./action";
+import { useRouter } from "next/navigation";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -25,8 +26,8 @@ const schema = z.object({
 });
 
 export default function LoginPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -39,30 +40,28 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof schema>) {
     try {
       setLoading(true);
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("password", values.password);
 
-      const data = await response.json();
+      const result = await login(formData);
 
-      if (data.error) {
-        toast.error(data.error);
-        return;
+      if (result?.error) {
+        toast.error(result.error);
+      } else if (result?.success) {
+        toast.success("Login successful! Redirecting...");
+        router.push("/dashboard");
       }
-
-      toast.success("Login successful!");
-      router.push("/dashboard");
     } catch (error) {
-      toast.error("Something went wrong client");
+      toast.error("Something went wrong");
+      console.error("Login error:", error);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 ">
+    <div className="flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
