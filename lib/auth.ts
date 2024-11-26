@@ -25,17 +25,20 @@ export const lucia = new Lucia(adapter, {
   },
 });
 
-// Declare type for Lucia
+// IMPORTANT: Extend the User type to include the 'role' property
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
     DatabaseUserAttributes: DatabaseUserAttributes;
   }
-}
-
-interface DatabaseUserAttributes {
-  email: string;
-  role: string;
+  interface DatabaseUserAttributes {
+    email: string;
+    role: "PATIENT" | "DOCTOR" | "PHARMACY";
+  }
+  interface User {
+    email: string;
+    role: "PATIENT" | "DOCTOR" | "PHARMACY";
+  }
 }
 
 export const validateRequest = cache(

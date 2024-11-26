@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const { user } = await validateRequest();
-  console.log(user);
+  console.log("api user account appionments info", user);
 
   if (!user || user.role !== "PATIENT") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

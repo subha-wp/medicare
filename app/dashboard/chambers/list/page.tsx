@@ -2,7 +2,6 @@ import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { ChamberList } from "@/components/chambers/chamber-list";
-import { AppointmentBookingForm } from "@/components/appointments/appointment-booking-form";
 
 export default async function ChambersListPage() {
   const { user } = await validateRequest();
