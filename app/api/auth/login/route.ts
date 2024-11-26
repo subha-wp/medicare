@@ -37,26 +37,13 @@ export async function POST(request: Request) {
     const session = await lucia.createSession(existingUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
 
-    // Use the cookies() API directly
-    const cookieStore = cookies();
-    cookieStore.set(
+    cookies().set(
       sessionCookie.name,
       sessionCookie.value,
       sessionCookie.attributes
     );
 
-    return NextResponse.json(
-      { success: true },
-      {
-        headers: {
-          "Set-Cookie": `${sessionCookie.name}=${
-            sessionCookie.value
-          }; ${Object.entries(sessionCookie.attributes)
-            .map(([key, value]) => `${key}=${value}`)
-            .join("; ")}`,
-        },
-      }
-    );
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

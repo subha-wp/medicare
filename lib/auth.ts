@@ -9,17 +9,14 @@ const adapter = new PrismaAdapter(prisma.session, prisma.user);
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
-    // Remove expires: false as it might be causing issues
+    expires: false,
     attributes: {
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
     },
   },
   getUserAttributes: (databaseUserAttributes) => {
     return {
+      id: databaseUserAttributes.id,
       email: databaseUserAttributes.email,
       role: databaseUserAttributes.role,
     };
@@ -31,22 +28,19 @@ declare module "lucia" {
     Lucia: typeof lucia;
     DatabaseUserAttributes: DatabaseUserAttributes;
   }
-  interface DatabaseUserAttributes {
-    email: string;
-    role: "PATIENT" | "DOCTOR" | "PHARMACY";
-  }
-  interface User {
-    email: string;
-    role: "PATIENT" | "DOCTOR" | "PHARMACY";
-  }
+}
+
+interface DatabaseUserAttributes {
+  id: string;
+  email: string;
+  role: "PATIENT" | "DOCTOR" | "PHARMACY";
 }
 
 export const validateRequest = cache(
   async (): Promise<
     { user: User; session: Session } | { user: null; session: null }
   > => {
-    const cookieStore = cookies();
-    const sessionId = cookieStore.get(lucia.sessionCookieName)?.value ?? null;
+    const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
 
     if (!sessionId) {
       return {
@@ -55,37 +49,27 @@ export const validateRequest = cache(
       };
     }
 
+    const result = await lucia.validateSession(sessionId);
+
     try {
-      const { session, user } = await lucia.validateSession(sessionId);
-
-      if (session?.fresh) {
-        const sessionCookie = lucia.createSessionCookie(session.id);
-        cookieStore.set(
+      if (result.session && result.session.fresh) {
+        const sessionCookie = lucia.createSessionCookie(result.session.id);
+        cookies().set(
           sessionCookie.name,
           sessionCookie.value,
           sessionCookie.attributes
         );
       }
-
-      if (!session) {
+      if (!result.session) {
         const sessionCookie = lucia.createBlankSessionCookie();
-        cookieStore.set(
+        cookies().set(
           sessionCookie.name,
           sessionCookie.value,
           sessionCookie.attributes
         );
       }
+    } catch {}
 
-      return {
-        user,
-        session,
-      };
-    } catch (e) {
-      console.error("Session validation error:", e);
-      return {
-        user: null,
-        session: null,
-      };
-    }
+    return result;
   }
 );
