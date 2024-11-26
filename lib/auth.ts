@@ -1,4 +1,4 @@
-//@ts-nocheck
+// @ts-nocheck
 import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
 import { Lucia, Session, User } from "lucia";
 import { cookies } from "next/headers";
@@ -83,3 +83,8 @@ export const validateRequest = cache(
     }
   }
 );
+
+export type AuthRequest = {
+  user: User | null;
+  session: Session | null;
+};
