@@ -4,17 +4,20 @@ import prisma from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { chamberId: string } }
+  context: { params: { chamberId: string } }
 ) {
-  const { chamberId } = params;
+  const { chamberId } = context.params;
+  console.log("GET function called with chamberId:", chamberId);
   const { user } = await validateRequest();
   if (!user) {
+    console.log("Unauthorized access attempt");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const dateStr = request.nextUrl.searchParams.get("date");
 
   if (!dateStr) {
+    console.log("Missing date parameter");
     return NextResponse.json(
       { error: "Date parameter is required" },
       { status: 400 }
@@ -47,6 +50,11 @@ export async function GET(
       },
     });
 
+    console.log("Successful response:", {
+      maxSlots: chamber.maxSlots,
+      bookedSlots,
+      availableSlots: chamber.maxSlots - bookedSlots,
+    });
     return NextResponse.json({
       maxSlots: chamber.maxSlots,
       bookedSlots,
