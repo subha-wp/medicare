@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { chamberId: string } }
 ) {
   const { user } = await validateRequest();
@@ -11,8 +11,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const dateStr = searchParams.get("date");
+  const dateStr = request.nextUrl.searchParams.get("date");
 
   if (!dateStr) {
     return NextResponse.json(
