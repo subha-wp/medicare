@@ -10,6 +10,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.json();
     const { email, password } = formData;
+    console.log("form Data on login route", formData);
 
     const existingUser = await prisma.user.findUnique({
       where: {
@@ -36,7 +37,9 @@ export async function POST(request: Request) {
     const session = await lucia.createSession(existingUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
 
-    (await cookies()).set(
+    // Use the cookies() API directly
+    const cookieStore = cookies();
+    cookieStore.set(
       sessionCookie.name,
       sessionCookie.value,
       sessionCookie.attributes

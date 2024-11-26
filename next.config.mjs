@@ -4,8 +4,9 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: [
         "localhost:3000",
-        process.env.NEXT_PUBLIC_PRODUCTION_URL, // Make sure to set this environment variable
-      ].filter(Boolean), // This removes any falsy values from the array
+        "medicare-blush.vercel.app",
+        process.env.NEXT_PUBLIC_VERCEL_URL,
+      ].filter(Boolean),
     },
   },
   serverExternalPackages: ["@node-rs/argon2"],

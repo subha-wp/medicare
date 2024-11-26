@@ -9,13 +9,14 @@ const adapter = new PrismaAdapter(prisma.session, prisma.user);
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
+    // Remove expires: false as it might be causing issues
     attributes: {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       httpOnly: true,
       path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
     },
-    expires: false,
   },
   getUserAttributes: (databaseUserAttributes) => {
     return {
@@ -25,7 +26,6 @@ export const lucia = new Lucia(adapter, {
   },
 });
 
-// IMPORTANT: Extend the User type to include the 'role' property
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
@@ -45,8 +45,8 @@ export const validateRequest = cache(
   async (): Promise<
     { user: User; session: Session } | { user: null; session: null }
   > => {
-    const sessionId =
-      (await cookies()).get(lucia.sessionCookieName)?.value ?? null;
+    const cookieStore = cookies();
+    const sessionId = cookieStore.get(lucia.sessionCookieName)?.value ?? null;
 
     if (!sessionId) {
       return {
@@ -55,39 +55,37 @@ export const validateRequest = cache(
       };
     }
 
-    const { session, user } = await lucia.validateSession(sessionId);
     try {
-      if (session && session.fresh) {
+      const { session, user } = await lucia.validateSession(sessionId);
+
+      if (session?.fresh) {
         const sessionCookie = lucia.createSessionCookie(session.id);
-        (await cookies()).set(
+        cookieStore.set(
           sessionCookie.name,
           sessionCookie.value,
           sessionCookie.attributes
         );
       }
+
       if (!session) {
         const sessionCookie = lucia.createBlankSessionCookie();
-        (await cookies()).set(
+        cookieStore.set(
           sessionCookie.name,
           sessionCookie.value,
           sessionCookie.attributes
         );
       }
+
       return {
-        session,
         user,
+        session,
       };
     } catch (e) {
-      console.error(e);
+      console.error("Session validation error:", e);
       return {
-        session: null,
         user: null,
+        session: null,
       };
     }
   }
 );
-
-export type AuthRequest = {
-  user: User | null;
-  session: Session | null;
-};
