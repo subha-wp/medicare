@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Drawer,
   DrawerContent,
@@ -7,9 +8,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { format, addDays, isSameDay, getDate } from "date-fns";
+import { AppointmentSlot } from "./appointment-slot";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 
 type Chamber = {
   id: string;
@@ -24,6 +34,7 @@ type Chamber = {
     specialization: string;
   };
   pharmacy: {
+    businessName: string;
     name: string;
     address: string;
   };
@@ -57,36 +68,44 @@ function getWeekNumberOfMonth(
   return "LAST";
 }
 
-function getNextValidDate(chamber: Chamber): Date {
-  const today = new Date();
-  const targetDay = weekDays[chamber.weekDay as keyof typeof weekDays];
-  let nextDate = today;
+function getNextValidDates(chamber: Chamber, count: number = 3): Date[] {
+  const dates: Date[] = [];
+  let currentDate = new Date();
 
-  // Find the next occurrence of the weekday
-  while (nextDate.getDay() !== targetDay) {
-    nextDate = addDays(nextDate, 1);
-  }
-
-  // Keep adding weeks until we find a date that matches both weekday and week number
-  while (getWeekNumberOfMonth(nextDate) !== chamber.weekNumber) {
-    nextDate = addDays(nextDate, 7);
-  }
-
-  // If today is the target day but it's past the chamber time, move to next occurrence
-  if (isSameDay(today, nextDate)) {
-    const [hours, minutes] = chamber.startTime.split(":");
-    const chamberTime = new Date(nextDate);
-    chamberTime.setHours(parseInt(hours), parseInt(minutes), 0);
-
-    if (today > chamberTime) {
-      // Add weeks until we find the next valid occurrence
-      do {
-        nextDate = addDays(nextDate, 7);
-      } while (getWeekNumberOfMonth(nextDate) !== chamber.weekNumber);
+  while (dates.length < count) {
+    // Find the next occurrence of the weekday
+    while (
+      currentDate.getDay() !==
+      weekDays[chamber.weekDay as keyof typeof weekDays]
+    ) {
+      currentDate = addDays(currentDate, 1);
     }
+
+    // Check if it matches the week number
+    if (getWeekNumberOfMonth(currentDate) === chamber.weekNumber) {
+      // Check if it's not past the chamber time for today
+      if (
+        !isSameDay(currentDate, new Date()) ||
+        !isTimePassed(chamber, currentDate)
+      ) {
+        dates.push(new Date(currentDate));
+      }
+    }
+
+    currentDate = addDays(currentDate, 7);
   }
 
-  return nextDate;
+  return dates;
+}
+
+function isTimePassed(chamber: Chamber, date: Date): boolean {
+  if (!isSameDay(date, new Date())) return false;
+
+  const [hours, minutes] = chamber.startTime.split(":");
+  const chamberTime = new Date(date);
+  chamberTime.setHours(parseInt(hours), parseInt(minutes), 0);
+
+  return new Date() > chamberTime;
 }
 
 export function AppointmentDrawer({
@@ -98,12 +117,50 @@ export function AppointmentDrawer({
   const [paymentMethod, setPaymentMethod] = useState<"ONLINE" | "CASH">(
     "ONLINE"
   );
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<number>(1);
+  const [availableDates, setAvailableDates] = useState<Date[]>([]);
+  const [slotAvailability, setSlotAvailability] = useState<
+    Record<string, number>
+  >({});
 
-  if (!chamber) return null;
+  useEffect(() => {
+    if (chamber && open) {
+      const dates = getNextValidDates(chamber);
+      setAvailableDates(dates);
+      setSelectedDate(dates[0]);
 
-  const appointmentDate = getNextValidDate(chamber);
+      // Fetch slot availability for all dates
+      dates.forEach(fetchSlotAvailability);
+    }
+  }, [chamber, open]);
+
+  const fetchSlotAvailability = async (date: Date) => {
+    if (!chamber) return;
+
+    try {
+      const response = await fetch(
+        `/api/chambers/${chamber.id}/slots?date=${date.toISOString()}`
+      );
+      const data = await response.json();
+
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      setSlotAvailability((prev) => ({
+        ...prev,
+        [date.toISOString()]: data.bookedSlots,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch slot availability:", error);
+    }
+  };
 
   const handleBookAppointment = async () => {
+    if (!selectedDate || !chamber) return;
+
     try {
       setLoading(true);
 
@@ -112,8 +169,8 @@ export function AppointmentDrawer({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chamberId: chamber.id,
-          date: appointmentDate.toISOString(),
-          slotNumber: 1, // You might want to let users choose slots
+          date: selectedDate.toISOString(),
+          slotNumber: selectedSlot,
           paymentMethod,
         }),
       });
@@ -134,10 +191,17 @@ export function AppointmentDrawer({
     }
   };
 
+  if (!chamber) return null;
+
+  const getAvailableSlots = (date: Date) => {
+    const bookedSlots = slotAvailability[date.toISOString()] || 0;
+    return chamber.maxSlots - bookedSlots;
+  };
+
   return (
     <Drawer open={open} onOpenChange={onClose}>
       <DrawerContent>
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full max-w-sm pb-4">
           <DrawerHeader>
             <DrawerTitle>Book Appointment</DrawerTitle>
           </DrawerHeader>
@@ -153,7 +217,7 @@ export function AppointmentDrawer({
               <div>
                 <h4 className="font-medium">Location</h4>
                 <p className="text-sm text-muted-foreground">
-                  {chamber.pharmacy.name}
+                  {chamber.pharmacy.businessName}
                   <br />
                   {chamber.pharmacy.address}
                 </p>
@@ -161,18 +225,57 @@ export function AppointmentDrawer({
 
               <div>
                 <h4 className="font-medium">Schedule</h4>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-2">
                   {chamber.weekNumber.charAt(0) +
                     chamber.weekNumber.slice(1).toLowerCase()}{" "}
                   {chamber.weekDay.charAt(0) +
                     chamber.weekDay.slice(1).toLowerCase()}{" "}
                   of every month
                   <br />
-                  Next available: {format(appointmentDate, "PPP")}
-                  <br />
                   Time: {chamber.startTime} - {chamber.endTime}
                 </p>
+                <ScrollArea className="w-full  rounded-md border">
+                  <div className="flex w-max space-x-4 p-4">
+                    {availableDates.map((date) => (
+                      <AppointmentSlot
+                        key={date.toISOString()}
+                        date={date}
+                        totalSlots={chamber.maxSlots}
+                        bookedSlots={slotAvailability[date.toISOString()] || 0}
+                        isSelected={
+                          selectedDate?.toISOString() === date.toISOString()
+                        }
+                        onSelect={() => setSelectedDate(date)}
+                      />
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
               </div>
+
+              {selectedDate && getAvailableSlots(selectedDate) > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Select Slot</h4>
+                  <Select
+                    value={selectedSlot.toString()}
+                    onValueChange={(value) => setSelectedSlot(parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a slot" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from(
+                        { length: getAvailableSlots(selectedDate) },
+                        (_, i) => i + 1
+                      ).map((slot) => (
+                        <SelectItem key={slot} value={slot.toString()}>
+                          Slot {slot}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div>
                 <h4 className="font-medium">Consultation Fee</h4>
@@ -201,7 +304,11 @@ export function AppointmentDrawer({
               <Button
                 className="w-full"
                 onClick={handleBookAppointment}
-                disabled={loading}
+                disabled={
+                  loading ||
+                  !selectedDate ||
+                  getAvailableSlots(selectedDate) <= 0
+                }
               >
                 {loading ? "Booking..." : "Confirm Booking"}
               </Button>
