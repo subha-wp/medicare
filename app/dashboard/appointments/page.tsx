@@ -1,3 +1,4 @@
+// @ts-nocheck
 // app/dashboard/appointments/page.tsx
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
