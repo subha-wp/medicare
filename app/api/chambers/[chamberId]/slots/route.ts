@@ -7,7 +7,7 @@ export async function GET(
   context: { params: { chamberId: string } }
 ) {
   const { chamberId } = context.params;
-  console.log("GET function called with chamberId:", chamberId);
+
   const { user } = await validateRequest();
   if (!user) {
     console.log("Unauthorized access attempt");
@@ -50,11 +50,6 @@ export async function GET(
       },
     });
 
-    console.log("Successful response:", {
-      maxSlots: chamber.maxSlots,
-      bookedSlots,
-      availableSlots: chamber.maxSlots - bookedSlots,
-    });
     return NextResponse.json({
       maxSlots: chamber.maxSlots,
       bookedSlots,
