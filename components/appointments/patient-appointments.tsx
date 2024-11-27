@@ -129,91 +129,97 @@ export function PatientAppointments() {
     );
   }
 
-  const AppointmentDetails = () => (
-    <>
-      <div className="space-y-6">
-        <div>
-          <h4 className="text-sm font-medium">Doctor</h4>
-          <p className="text-sm mt-1">{selectedAppointment?.doctor.name}</p>
-          <p className="text-sm text-muted-foreground">
-            {selectedAppointment?.doctor.specialization}
-          </p>
-        </div>
+  const AppointmentDetails = () => {
+    if (!selectedAppointment) return null;
 
-        <div>
-          <h4 className="text-sm font-medium">Date & Time</h4>
-          <p className="text-sm mt-1">
-            {format(new Date(selectedAppointment?.date || ""), "PPP")}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {formatTime(selectedAppointment?.chamber.startTime || "")} -{" "}
-            {formatTime(selectedAppointment?.chamber.endTime || "")}
-          </p>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-medium">Location</h4>
-          <p className="text-sm mt-1">
-            {selectedAppointment?.chamber.pharmacy.businessName}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {selectedAppointment?.chamber.pharmacy.address}
-          </p>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-medium">Payment Details</h4>
-          <p className="text-sm mt-1">Amount: ₹{selectedAppointment?.amount}</p>
-          <div className="flex gap-2 mt-1">
-            <Badge variant="outline">
-              {selectedAppointment?.paymentStatus}
-            </Badge>
-            <Badge variant="outline">
-              {selectedAppointment?.paymentMethod}
-            </Badge>
-          </div>
-        </div>
-
-        {selectedAppointment?.medicalRecord && (
+    return (
+      <>
+        <div className="space-y-6">
           <div>
-            <h4 className="text-sm font-medium">Medical Record</h4>
-            <div className="mt-2 space-y-2">
-              <div>
-                <p className="text-sm font-medium">Diagnosis</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedAppointment.medicalRecord.diagnosis}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Prescription</p>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">
-                  {selectedAppointment.medicalRecord.prescription}
-                </p>
-              </div>
-              {selectedAppointment.medicalRecord.notes && (
-                <div>
-                  <p className="text-sm font-medium">Notes</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedAppointment.medicalRecord.notes}
-                  </p>
-                </div>
-              )}
+            <h4 className="text-sm font-medium">Doctor</h4>
+            <p className="text-sm mt-1">{selectedAppointment.doctor.name}</p>
+            <p className="text-sm text-muted-foreground">
+              {selectedAppointment.doctor.specialization}
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-medium">Date & Time</h4>
+            <p className="text-sm mt-1">
+              {format(new Date(selectedAppointment.date), "PPP")}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {formatTime(selectedAppointment.chamber.startTime)} -{" "}
+              {formatTime(selectedAppointment.chamber.endTime)}
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-medium">Location</h4>
+            <p className="text-sm mt-1">
+              {selectedAppointment.chamber.pharmacy.businessName}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {selectedAppointment.chamber.pharmacy.address}
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-medium">Payment Details</h4>
+            <p className="text-sm mt-1">
+              Amount: ₹{selectedAppointment.amount}
+            </p>
+            <div className="flex gap-2 mt-1">
+              <Badge variant="outline">
+                {selectedAppointment.paymentStatus}
+              </Badge>
+              <Badge variant="outline">
+                {selectedAppointment.paymentMethod}
+              </Badge>
             </div>
           </div>
-        )}
-      </div>
 
-      {selectedAppointment?.status === "PENDING" && (
-        <Button
-          variant="destructive"
-          className="w-full mt-6"
-          onClick={() => setCancelConfirmOpen(true)}
-        >
-          Cancel Appointment
-        </Button>
-      )}
-    </>
-  );
+          {selectedAppointment.medicalRecord && (
+            <div>
+              <h4 className="text-sm font-medium">Medical Record</h4>
+              <div className="mt-2 space-y-2">
+                <div>
+                  <p className="text-sm font-medium">Diagnosis</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedAppointment.medicalRecord.diagnosis}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Prescription</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                    {selectedAppointment.medicalRecord.prescription}
+                  </p>
+                </div>
+                {selectedAppointment.medicalRecord.notes && (
+                  <div>
+                    <p className="text-sm font-medium">Notes</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedAppointment.medicalRecord.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {selectedAppointment.status === "PENDING" && (
+          <Button
+            variant="destructive"
+            className="w-full mt-6"
+            onClick={() => setCancelConfirmOpen(true)}
+          >
+            Cancel Appointment
+          </Button>
+        )}
+      </>
+    );
+  };
 
   const CancelConfirmationDialog = () => (
     <Dialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
@@ -304,7 +310,7 @@ export function PatientAppointments() {
       {isDesktop ? (
         <Dialog
           open={!!selectedAppointment}
-          onOpenChange={() => setSelectedAppointment(null)}
+          onOpenChange={(open) => !open && setSelectedAppointment(null)}
         >
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -316,7 +322,7 @@ export function PatientAppointments() {
       ) : (
         <Drawer
           open={!!selectedAppointment}
-          onOpenChange={() => setSelectedAppointment(null)}
+          onOpenChange={(open) => !open && setSelectedAppointment(null)}
         >
           <DrawerContent>
             <DrawerHeader className="text-left">
