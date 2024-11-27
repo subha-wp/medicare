@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { appointmentId: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ appointmentId: string }> }
 ) {
+  const { appointmentId } = await params;
   const { user } = await validateRequest();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -13,7 +14,7 @@ export async function PATCH(
 
   try {
     const appointment = await prisma.appointment.findUnique({
-      where: { id: params.appointmentId },
+      where: { id: appointmentId },
       include: { patient: true },
     });
 
@@ -41,7 +42,7 @@ export async function PATCH(
     }
 
     const updatedAppointment = await prisma.appointment.update({
-      where: { id: params.appointmentId },
+      where: { id: appointmentId },
       data: { status: "CANCELLED" },
     });
 
