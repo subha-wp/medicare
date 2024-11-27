@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
@@ -17,7 +16,7 @@ export async function GET() {
 
     if (!pharmacy) {
       return NextResponse.json(
-        { error: "Pharmacy not found" },
+        { error: "Pharmacy profile not found" },
         { status: 404 }
       );
     }
@@ -35,6 +34,21 @@ export async function GET() {
         doctor: {
           select: {
             name: true,
+            specialization: true,
+          },
+        },
+        chamber: {
+          select: {
+            startTime: true,
+            endTime: true,
+            fees: true,
+          },
+        },
+        medicalRecord: {
+          select: {
+            diagnosis: true,
+            prescription: true,
+            notes: true,
           },
         },
       },

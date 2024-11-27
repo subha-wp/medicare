@@ -1,23 +1,27 @@
-// @ts-nocheck
-// app/dashboard/appointments/page.tsx
-
+import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { AppointmentList } from "@/components/appointments/appointment-list";
+import { PatientAppointments } from "@/components/appointments/patient-appointments";
+import { DoctorAppointments } from "@/components/appointments/doctor-appointments";
+import { PharmacyAppointments } from "@/components/appointments/pharmacy-appointments";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { headers } from "next/headers";
 
 export default async function AppointmentsPage() {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/appointments`,
-    {
-      headers: {
-        Cookie: (await headers()).get("cookie") || "",
-      },
-    }
-  );
+  const { user } = await validateRequest();
+  if (!user) redirect("/auth/login");
 
-  const appointments = await response.json();
+  const renderAppointments = () => {
+    switch (user.role) {
+      case "PATIENT":
+        return <PatientAppointments />;
+      case "DOCTOR":
+        return <DoctorAppointments />;
+      case "PHARMACY":
+        return <PharmacyAppointments />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -30,7 +34,7 @@ export default async function AppointmentsPage() {
         )}
       </div>
 
-      <AppointmentList appointments={appointments} userRole={user.role} />
+      {renderAppointments()}
     </div>
   );
 }
