@@ -24,11 +24,15 @@ export function BottomNav({ userRole }: BottomNavProps) {
     { href: "/dashboard/appointments", icon: Calendar, label: "Appointments" },
     ...(userRole === "PATIENT"
       ? [
-          { href: "/dashboard/chambers/list", icon: Users, label: "Chambers" },
           {
-            href: "/dashboard/medical-reports",
-            icon: FileText,
-            label: "Reports",
+            href: "/dashboard/chambers/list",
+            icon: Building,
+            label: "Chambers",
+          },
+          {
+            href: "/dashboard/doctors",
+            icon: Users,
+            label: "Doctors",
           },
         ]
       : []),
@@ -41,7 +45,6 @@ export function BottomNav({ userRole }: BottomNavProps) {
     ...(userRole === "PHARMACY"
       ? [{ href: "/dashboard/chambers", icon: Building, label: "Chambers" }]
       : []),
-    { href: "/dashboard/settings", icon: Settings, label: "Settings" },
   ];
 
   return (

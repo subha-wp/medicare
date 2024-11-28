@@ -15,6 +15,7 @@ model User {
   id             String    @id @unique
   email          String    @unique
   hashedPassword String
+  avatarUrl      String?
   role           UserRole
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

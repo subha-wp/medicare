@@ -1,18 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get("q");
+const ITEMS_PER_PAGE = 9;
 
-  if (!query) {
-    return NextResponse.json(
-      { error: "Search query is required" },
-      { status: 400 }
-    );
+export async function GET(request: NextRequest) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get("q") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const cursor = searchParams.get("cursor") || undefined;
+
     const doctors = await prisma.doctor.findMany({
       where: {
         OR: [
@@ -24,11 +27,28 @@ export async function GET(request: Request) {
         id: true,
         name: true,
         specialization: true,
+        qualification: true,
+        experience: true,
+        about: true,
       },
-      take: 10,
+      take: ITEMS_PER_PAGE + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      orderBy: {
+        name: "asc",
+      },
     });
 
-    return NextResponse.json({ doctors });
+    let nextCursor: typeof cursor | undefined = undefined;
+    if (doctors.length > ITEMS_PER_PAGE) {
+      const nextItem = doctors.pop();
+      nextCursor = nextItem?.id;
+    }
+
+    return NextResponse.json({
+      doctors,
+      nextCursor,
+      hasMore: doctors.length === ITEMS_PER_PAGE,
+    });
   } catch (error) {
     console.error("Error searching doctors:", error);
     return NextResponse.json(

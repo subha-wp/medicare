@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/auth/actions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserButton from "./UserButton";
 
 interface UserInfo {
   name?: string;
@@ -60,10 +62,7 @@ export function Header({ user }: HeaderProps) {
           <h1 className="text-lg font-semibold">{getGreeting()}</h1>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" onClick={() => logout()}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Log out
-          </Button>
+          <UserButton />
         </div>
       </div>
     </header>
