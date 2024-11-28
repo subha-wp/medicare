@@ -1,34 +1,32 @@
 "use client";
 
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function DoctorSearch() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(searchParams.get("query") || "");
-
   const debouncedValue = useDebounce(value, 500);
 
-  const createQueryString = (value: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (value) {
-      params.set("query", value);
-    } else {
-      params.delete("query");
-    }
-    return params.toString();
-  };
+  useEffect(() => {
+    const createQueryString = (value: string) => {
+      const params = new URLSearchParams(searchParams);
+      if (value) {
+        params.set("query", value);
+      } else {
+        params.delete("query");
+      }
+      return params.toString();
+    };
 
-  // Update URL when debounced value changes
-  useState(() => {
     const queryString = createQueryString(debouncedValue);
     router.push(`${pathname}?${queryString}`);
-  });
+  }, [debouncedValue, pathname, router, searchParams]);
 
   return (
     <div className="w-full max-w-xl relative">

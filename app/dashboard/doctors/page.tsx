@@ -17,7 +17,7 @@ export default async function DoctorsPage() {
         </p>
       </div>
 
-      {/* <DoctorSearch /> */}
+      <DoctorSearch />
       <DoctorList />
     </div>
   );

@@ -1,10 +1,11 @@
-//@ts-nocheck
+// @ts-nocheck
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AppointmentDrawer } from "./appointment-drawer";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type Chamber = {
   id: string;
@@ -15,6 +16,7 @@ type Chamber = {
   fees: number;
   maxSlots: number;
   doctor: {
+    id: string;
     name: string;
     specialization: string;
     qualification: string;
@@ -42,6 +44,14 @@ function formatTime(time: string): string {
 export function ChamberList({ chambers, userRole }: ChamberListProps) {
   const [selectedChamber, setSelectedChamber] = useState<Chamber | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const doctorId = searchParams.get("doctorId");
+  const doctorName = searchParams.get("doctorName");
+
+  // Filter chambers if doctorId is provided
+  const filteredChambers = doctorId
+    ? chambers.filter((chamber) => chamber.doctor.id === doctorId)
+    : chambers;
 
   const handleBookAppointment = (chamber: Chamber) => {
     setSelectedChamber(chamber);
@@ -50,8 +60,16 @@ export function ChamberList({ chambers, userRole }: ChamberListProps) {
 
   return (
     <>
+      {doctorName && (
+        <div className="mb-6">
+          <h3 className="text-xl font-semibold">
+            Chambers for Dr. {decodeURIComponent(doctorName)}
+          </h3>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {chambers.map((chamber) => (
+        {filteredChambers.map((chamber) => (
           <Card key={chamber.id} className="flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-start justify-between">
@@ -110,6 +128,12 @@ export function ChamberList({ chambers, userRole }: ChamberListProps) {
           setSelectedChamber(null);
         }}
       />
+
+      {filteredChambers.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          No chambers available.
+        </div>
+      )}
     </>
   );
 }

@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { useIntersection } from "@/hooks/use-intersection";
 import { useSearchParams } from "next/navigation";
 import { DoctorCard } from "./doctor-card";
-import { DoctorChambersDialog } from "./doctor-chambers-dialog";
 import { Loader2 } from "lucide-react";
 
 type Doctor = {
@@ -22,7 +21,6 @@ export function DoctorList() {
   const query = searchParams.get("query");
   const [loading, setLoading] = useState(false);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
@@ -72,7 +70,7 @@ export function DoctorList() {
     if (entry?.isIntersecting && hasMore && !loading && nextCursor) {
       fetchDoctors(nextCursor);
     }
-  }, [entry?.isIntersecting]);
+  }, [entry?.isIntersecting, hasMore, loading, nextCursor]);
 
   if (doctors.length === 0 && !loading) {
     return (
@@ -90,10 +88,7 @@ export function DoctorList() {
             key={doctor.id}
             ref={index === doctors.length - 1 ? lastDoctorRef : null}
           >
-            <DoctorCard
-              doctor={doctor}
-              onSelect={() => setSelectedDoctor(doctor)}
-            />
+            <DoctorCard doctor={doctor} />
           </div>
         ))}
       </div>
@@ -103,12 +98,6 @@ export function DoctorList() {
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
       )}
-
-      <DoctorChambersDialog
-        doctor={selectedDoctor}
-        open={!!selectedDoctor}
-        onClose={() => setSelectedDoctor(null)}
-      />
     </>
   );
 }
