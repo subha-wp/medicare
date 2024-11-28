@@ -11,7 +11,7 @@ interface SearchParams {
 export default async function ChambersListPage({
   searchParams,
 }: {
-  searchParams: SearchParams;
+  searchParams: Promise<SearchParams>;
 }) {
   const { doctorId, doctorName } = await searchParams;
   const { user } = await validateRequest();
