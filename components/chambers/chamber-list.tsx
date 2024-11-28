@@ -1,11 +1,11 @@
-// @ts-nocheck
+//@ts-nocheck
 "use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AppointmentDrawer } from "./appointment-drawer";
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 type Chamber = {
   id: string;
@@ -31,6 +31,7 @@ type Chamber = {
 type ChamberListProps = {
   chambers: Chamber[];
   userRole: string;
+  doctorName?: string;
 };
 
 function formatTime(time: string): string {
@@ -41,17 +42,13 @@ function formatTime(time: string): string {
   return `${formattedHours}:${minutes} ${ampm}`;
 }
 
-export function ChamberList({ chambers, userRole }: ChamberListProps) {
+export function ChamberList({
+  chambers,
+  userRole,
+  doctorName,
+}: ChamberListProps) {
   const [selectedChamber, setSelectedChamber] = useState<Chamber | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const searchParams = useSearchParams();
-  const doctorId = searchParams.get("doctorId");
-  const doctorName = searchParams.get("doctorName");
-
-  // Filter chambers if doctorId is provided
-  const filteredChambers = doctorId
-    ? chambers.filter((chamber) => chamber.doctor.id === doctorId)
-    : chambers;
 
   const handleBookAppointment = (chamber: Chamber) => {
     setSelectedChamber(chamber);
@@ -69,12 +66,12 @@ export function ChamberList({ chambers, userRole }: ChamberListProps) {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredChambers.map((chamber) => (
+        {chambers.map((chamber) => (
           <Card key={chamber.id} className="flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-start justify-between">
                 <div>
-                  <span className="text-xl">{chamber.doctor.name}</span>
+                  <span className="text-xl">Dr. {chamber.doctor.name}</span>
                   <Badge variant="outline" className="ml-2">
                     {chamber.doctor.specialization}
                   </Badge>
@@ -89,7 +86,10 @@ export function ChamberList({ chambers, userRole }: ChamberListProps) {
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Schedule:</p>
                   <p className="text-sm">
-                    {chamber.weekNumber} {chamber.weekDay}
+                    {chamber.weekNumber.charAt(0) +
+                      chamber.weekNumber.slice(1).toLowerCase()}{" "}
+                    {chamber.weekDay.charAt(0) +
+                      chamber.weekDay.slice(1).toLowerCase()}
                   </p>
                   <p className="text-sm">
                     {formatTime(chamber.startTime)} -{" "}
@@ -129,7 +129,7 @@ export function ChamberList({ chambers, userRole }: ChamberListProps) {
         }}
       />
 
-      {filteredChambers.length === 0 && (
+      {chambers.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           No chambers available.
         </div>
