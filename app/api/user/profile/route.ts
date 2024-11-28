@@ -1,5 +1,3 @@
-// @ts-nocheck
-// app/api/user/profile/route.ts
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
@@ -34,6 +32,7 @@ export async function GET() {
     return NextResponse.json({
       email: user.email,
       role: user.role,
+      avatarUrl: user.avatarUrl,
       profile,
     });
   } catch (error) {
@@ -54,30 +53,40 @@ export async function PUT(request: Request) {
 
   try {
     const data = await request.json();
+    const { avatarUrl, ...profileData } = data;
+
+    // Update user's avatar
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { avatarUrl },
+    });
 
     let updatedProfile;
     switch (user.role) {
       case "PATIENT":
         updatedProfile = await prisma.patient.update({
           where: { userId: user.id },
-          data,
+          data: profileData,
         });
         break;
       case "DOCTOR":
         updatedProfile = await prisma.doctor.update({
           where: { userId: user.id },
-          data,
+          data: profileData,
         });
         break;
       case "PHARMACY":
         updatedProfile = await prisma.pharmacy.update({
           where: { userId: user.id },
-          data,
+          data: profileData,
         });
         break;
     }
 
-    return NextResponse.json({ success: true, profile: updatedProfile });
+    return NextResponse.json({
+      success: true,
+      profile: { ...updatedProfile, avatarUrl },
+    });
   } catch (error) {
     console.error("Profile update error:", error);
     return NextResponse.json(

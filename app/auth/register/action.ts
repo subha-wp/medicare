@@ -1,8 +1,7 @@
-// @ts-nocheck
+//@ts-nocheck
 "use server";
 
 import { z } from "zod";
-
 import prisma from "@/lib/prisma";
 import { generateIdFromEntropySize } from "lucia";
 import { hash } from "@node-rs/argon2";
@@ -30,7 +29,6 @@ export async function register(formData: FormData) {
   }
 
   const { email, password, role, profile } = result.data;
-  // console.log(result);
 
   try {
     const existingUser = await prisma.user.findUnique({

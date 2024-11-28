@@ -1,14 +1,11 @@
-// components/file-upload.tsx
-"use client";
-
-import { CldUploadWidget } from "next-cloudinary";
-import { Button } from "@/components/ui/button";
+import { useState, useCallback, useEffect } from "react";
+import { Button } from "./ui/button";
 import { Upload } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CldUploadWidget } from "next-cloudinary";
 
 interface FileUploadProps {
-  onChange: (value: string) => void;
-  value: string;
+  onChange: (url: string) => void;
+  value?: string;
   label: string;
 }
 
@@ -19,13 +16,20 @@ export function FileUpload({ onChange, value, label }: FileUploadProps) {
     setIsMounted(true);
   }, []);
 
+  const handleUpload = useCallback(
+    (result: any) => {
+      onChange(result.info.secure_url);
+    },
+    [onChange]
+  );
+
   if (!isMounted) {
     return null;
   }
 
   return (
     <CldUploadWidget
-      onUpload={(result: any) => onChange(result.info.secure_url)}
+      onSuccess={handleUpload}
       uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
       options={{
         maxFiles: 1,

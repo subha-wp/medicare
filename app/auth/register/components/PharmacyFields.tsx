@@ -1,3 +1,4 @@
+"use client";
 import {
   FormField,
   FormItem,
@@ -8,12 +9,37 @@ import {
 import { Input } from "@/components/ui/input";
 import { FileUpload } from "@/components/file-upload";
 import { UseFormReturn } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { MapPin } from "lucide-react";
+import { useState } from "react";
 
 interface PharmacyFieldsProps {
   form: UseFormReturn<any>;
 }
 
 export function PharmacyFields({ form }: PharmacyFieldsProps) {
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleGetLocation = () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          form.setValue("profile.location.latitude", latitude);
+          form.setValue("profile.location.longitude", longitude);
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setIsLocating(false);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+      setIsLocating(false);
+    }
+  };
   return (
     <>
       <FormField
@@ -71,6 +97,43 @@ export function PharmacyFields({ form }: PharmacyFieldsProps) {
           </FormItem>
         )}
       />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="profile.location.latitude"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Latitude</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Latitude" readOnly />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="profile.location.longitude"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Longitude</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Longitude" readOnly />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleGetLocation}
+        disabled={isLocating}
+      >
+        {isLocating ? "Getting Location..." : "Get Current Location"}
+        <MapPin className="ml-2 h-4 w-4" />
+      </Button>
 
       <FormField
         control={form.control}
