@@ -5,6 +5,7 @@ import { DoctorAppointments } from "@/components/appointments/doctor-appointment
 import { PharmacyAppointments } from "@/components/appointments/pharmacy-appointments";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 
 export default async function AppointmentsPage() {
   const { user } = await validateRequest();
@@ -28,8 +29,11 @@ export default async function AppointmentsPage() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">Appointments</h2>
         {user.role === "PATIENT" && (
-          <Link href="/dashboard/chambers/list">
-            <Button>Book New Appointment</Button>
+          <Link
+            href="/dashboard/chambers/list"
+            className="bg-black rounded-full"
+          >
+            <Plus color="white" size={28} />
           </Link>
         )}
       </div>
