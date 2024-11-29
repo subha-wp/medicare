@@ -19,7 +19,7 @@ export function DocumentsView({ documents }: DocumentsViewProps) {
   const [openDoc, setOpenDoc] = useState<string | null>(null);
   const { user } = useSession();
 
-  const parsedDocs = JSON.parse(documents);
+  const parsedDocs = documents;
 
   const documentTitles: { [key: string]: string } = {
     licenseDoc: "License",

@@ -56,29 +56,51 @@ export async function PUT(request: Request) {
     const { avatarUrl, ...profileData } = data;
 
     // Update user's avatar
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { avatarUrl },
-    });
+    if (avatarUrl) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl },
+      });
+    }
 
     let updatedProfile;
     switch (user.role) {
       case "PATIENT":
         updatedProfile = await prisma.patient.update({
           where: { userId: user.id },
-          data: profileData,
+          data: {
+            ...profileData,
+            dateOfBirth: profileData.dateOfBirth
+              ? new Date(profileData.dateOfBirth)
+              : undefined,
+          },
         });
         break;
       case "DOCTOR":
         updatedProfile = await prisma.doctor.update({
           where: { userId: user.id },
-          data: profileData,
+          data: {
+            name: profileData.name,
+            phone: profileData.phone,
+            address: profileData.address,
+            specialization: profileData.specialization,
+            qualification: profileData.qualification,
+            experience: profileData.experience,
+            about: profileData.about,
+          },
         });
         break;
       case "PHARMACY":
         updatedProfile = await prisma.pharmacy.update({
           where: { userId: user.id },
-          data: profileData,
+          data: {
+            name: profileData.name,
+            phone: profileData.phone,
+            address: profileData.address,
+            businessName: profileData.businessName,
+            gstin: profileData.gstin,
+            location: profileData.location,
+          },
         });
         break;
     }
