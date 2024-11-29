@@ -75,7 +75,7 @@ export async function register(formData: FormData) {
             data: {
               userId,
               ...profile,
-              documents: JSON.stringify(profile.documents),
+              documents: profile.documents,
             },
           });
           break;
@@ -84,8 +84,8 @@ export async function register(formData: FormData) {
             data: {
               userId,
               ...profile,
-              location: JSON.stringify(profile.location),
-              documents: JSON.stringify(profile.documents),
+              location: profile.location,
+              documents: profile.documents,
             },
           });
           break;
