@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import UserAvatar from "../UserAvatar";
 
 type DoctorCardProps = {
   doctor: {
@@ -9,6 +10,7 @@ type DoctorCardProps = {
     name: string;
     specialization: string;
     qualification: string;
+    avatarUrl: string;
     experience: number;
     about?: string | null;
   };
@@ -29,11 +31,14 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
     <Card className="cursor-pointer hover:shadow-md transition-shadow">
       <CardHeader>
         <CardTitle className="flex items-start justify-between">
-          <div>
-            <span className="text-xl">Dr. {doctor.name}</span>
-            <Badge variant="outline" className="ml-2">
-              {doctor.specialization}
-            </Badge>
+          <div className="flex space-x-2">
+            <UserAvatar avatarUrl={doctor.avatarUrl} />
+            <div className="flex flex-col">
+              <span className="text-xl">Dr. {doctor.name}</span>
+              <Badge variant="outline" className="max-w-max">
+                {doctor.specialization}
+              </Badge>
+            </div>
           </div>
         </CardTitle>
       </CardHeader>

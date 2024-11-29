@@ -30,6 +30,7 @@ export async function GET() {
           select: {
             name: true,
             specialization: true,
+            avatarUrl: true,
           },
         },
         chamber: {

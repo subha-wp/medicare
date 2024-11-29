@@ -13,6 +13,7 @@ type Doctor = {
   specialization: string;
   qualification: string;
   experience: number;
+  avatarUrl: string;
   about?: string | null;
 };
 

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { toast } from "sonner";
+import UserAvatar from "../UserAvatar";
 
 type Appointment = {
   id: string;
@@ -35,6 +36,7 @@ type Appointment = {
   paymentMethod: string;
   amount: number;
   doctor: {
+    avatarUrl: string | null | undefined;
     name: string;
     specialization: string;
   };
@@ -276,11 +278,14 @@ export function PatientAppointments() {
         >
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-medium">{appointment.doctor.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {appointment.doctor.specialization}
-                </p>
+              <div className="flex space-x-2">
+                <UserAvatar avatarUrl={appointment.doctor.avatarUrl} />
+                <div>
+                  <h3 className="font-medium">{appointment.doctor.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {appointment.doctor.specialization}
+                  </p>
+                </div>
               </div>
               <Badge
                 variant={

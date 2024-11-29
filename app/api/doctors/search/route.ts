@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
         qualification: true,
         experience: true,
         about: true,
+        avatarUrl: true,
       },
       take: ITEMS_PER_PAGE + 1,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),

@@ -56,12 +56,10 @@ export async function PUT(request: Request) {
     const { avatarUrl, ...profileData } = data;
 
     // Update user's avatar
-    if (avatarUrl) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { avatarUrl },
-      });
-    }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { avatarUrl },
+    });
 
     let updatedProfile;
     switch (user.role) {
@@ -87,6 +85,7 @@ export async function PUT(request: Request) {
             qualification: profileData.qualification,
             experience: profileData.experience,
             about: profileData.about,
+            avatarUrl, // Add this line
           },
         });
         break;
@@ -100,6 +99,7 @@ export async function PUT(request: Request) {
             businessName: profileData.businessName,
             gstin: profileData.gstin,
             location: profileData.location,
+            avatarUrl, // Add this line
           },
         });
         break;
@@ -107,7 +107,7 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({
       success: true,
-      profile: { ...updatedProfile, avatarUrl },
+      profile: updatedProfile,
     });
   } catch (error) {
     console.error("Profile update error:", error);

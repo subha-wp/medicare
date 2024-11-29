@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+import UserAvatar from "../UserAvatar";
+import { Badge } from "../ui/badge";
 
 type Chamber = {
   id: string;
@@ -30,6 +32,7 @@ type Chamber = {
   fees: number;
   maxSlots: number;
   doctor: {
+    avatarUrl: string | null | undefined;
     name: string;
     specialization: string;
   };
@@ -206,12 +209,20 @@ export function AppointmentDrawer({
             <DrawerTitle>Book Appointment</DrawerTitle>
           </DrawerHeader>
           <div className="p-4 pb-0">
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div>
                 <h4 className="font-medium">Doctor Details</h4>
-                <p className="text-sm text-muted-foreground">
-                  {chamber.doctor.name} - {chamber.doctor.specialization}
-                </p>
+                <div className="flex space-x-2">
+                  <UserAvatar avatarUrl={chamber.doctor.avatarUrl} />
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {chamber.doctor.name}
+                    </p>
+                    <small className="max-w-max border rounded-md p-[1px]">
+                      {chamber.doctor.specialization}
+                    </small>
+                  </div>
+                </div>
               </div>
 
               <div>

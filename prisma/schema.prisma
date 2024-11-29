@@ -72,6 +72,7 @@ model Doctor {
   aadhaarNo      String    @unique
   documents      Json      // Stores document URLs for license and aadhaar
   user           User      @relation(fields: [userId], references: [id])
+  avatarUrl     String?
 
   chambers       Chamber[]
   appointments   Appointment[]
@@ -90,6 +91,7 @@ model Pharmacy {
   tradeLicense  String
   documents     Json      // Stores document URLs
   user          User      @relation(fields: [userId], references: [id])
+  avatarUrl     String?
 
   chambers      Chamber[]
   appointments  Appointment[]
