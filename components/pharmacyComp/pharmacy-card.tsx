@@ -40,9 +40,6 @@ export function PharmacyCard({ pharmacy }: PharmacyCardProps) {
         <CardTitle className="flex items-start justify-between">
           <div className="flex flex-col">
             <span className="text-xl">{pharmacy.businessName}</span>
-            <Badge variant="outline" className="max-w-max mt-1">
-              {pharmacy.name}
-            </Badge>
           </div>
         </CardTitle>
       </CardHeader>

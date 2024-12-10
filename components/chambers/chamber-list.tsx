@@ -104,13 +104,13 @@ export function ChamberList({
   return (
     <div>
       {doctorName && (
-        <h2 className="text-2xl font-bold mb-6">
+        <h2 className=" font-bold mb-6">
           Chambers for Dr. {decodeURIComponent(doctorName)}
         </h2>
       )}
 
       {pharmacyName && (
-        <h2 className="text-2xl font-bold mb-6">
+        <h2 className=" font-bold mb-6">
           Chambers at {decodeURIComponent(pharmacyName)}
         </h2>
       )}
