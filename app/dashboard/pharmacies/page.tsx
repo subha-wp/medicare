@@ -1,6 +1,6 @@
-//@ts-nocheck
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
+
 import { PharmacySearch } from "@/components/pharmacy/pharmacy-search";
 import { PharmacyList } from "@/components/pharmacy/pharmacy-list";
 
