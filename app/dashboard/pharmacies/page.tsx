@@ -1,8 +1,8 @@
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
-import { PharmacySearch } from "@/components/pharmacy/pharmacy-search";
-import { PharmacyList } from "@/components/pharmacy/pharmacy-list";
+import { PharmacySearch } from "@/components/pharmacyComp/pharmacy-search";
+import { PharmacyList } from "@/components/pharmacyComp/pharmacy-list";
 
 export default async function PharmaciesPage() {
   const { user } = await validateRequest();

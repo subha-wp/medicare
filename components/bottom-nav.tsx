@@ -53,7 +53,7 @@ export function BottomNav({ userRole }: BottomNavProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center py-2 px-3 text-xs",
+              "flex flex-col items-center py-2 px-3 text-[10px]",
               pathname === item.href
                 ? "text-primary"
                 : "text-muted-foreground hover:text-primary"
