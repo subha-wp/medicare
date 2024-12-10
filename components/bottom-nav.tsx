@@ -2,14 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  Home,
-  Calendar,
-  Users,
-  FileText,
-  Building,
-  Settings,
-} from "lucide-react";
+import { Home, Calendar, Users, Building2, Settings, Pill } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BottomNavProps {
@@ -26,7 +19,7 @@ export function BottomNav({ userRole }: BottomNavProps) {
       ? [
           {
             href: "/dashboard/chambers/list",
-            icon: Building,
+            icon: Building2,
             label: "Chambers",
           },
           {
@@ -34,16 +27,21 @@ export function BottomNav({ userRole }: BottomNavProps) {
             icon: Users,
             label: "Doctors",
           },
+          {
+            href: "/dashboard/pharmacies",
+            icon: Pill,
+            label: "Pharmacies",
+          },
         ]
       : []),
     ...(userRole === "DOCTOR"
       ? [
           { href: "/dashboard/patients", icon: Users, label: "Patients" },
-          { href: "/dashboard/chambers", icon: Building, label: "Chambers" },
+          { href: "/dashboard/chambers", icon: Building2, label: "Chambers" },
         ]
       : []),
     ...(userRole === "PHARMACY"
-      ? [{ href: "/dashboard/chambers", icon: Building, label: "Chambers" }]
+      ? [{ href: "/dashboard/chambers", icon: Building2, label: "Chambers" }]
       : []),
   ];
 

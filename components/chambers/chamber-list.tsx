@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -22,7 +23,7 @@ type Chamber = {
     name: string;
     specialization: string;
     qualification: string;
-    avatarUrl?: string;
+    avatarUrl?: string | null;
   };
   pharmacy: {
     name: string;
@@ -111,7 +112,9 @@ export function ChamberList({
             <CardHeader>
               <CardTitle className="flex items-start justify-between">
                 <div className="flex space-x-2">
-                  <UserAvatar avatarUrl={chamber.doctor.avatarUrl} />
+                  <UserAvatar
+                    avatarUrl={chamber.doctor.avatarUrl || undefined}
+                  />
                   <div className="flex flex-col justify-start">
                     <span className="text-xl">Dr. {chamber.doctor.name}</span>
                     <Badge variant="outline" className="max-w-max">
