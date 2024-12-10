@@ -9,6 +9,7 @@ import { AppointmentDrawer } from "./appointment-drawer";
 import UserAvatar from "../UserAvatar";
 import { calculateDistance } from "@/lib/distance";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import { Loader2 } from "lucide-react";
 
 type Chamber = {
   id: string;
@@ -42,6 +43,7 @@ type ChamberListProps = {
   chambers: Chamber[];
   userRole: string;
   doctorName?: string;
+  pharmacyName?: string;
 };
 
 function formatTime(time: string): string {
@@ -53,19 +55,21 @@ function formatTime(time: string): string {
 }
 
 export function ChamberList({
-  chambers,
+  chambers: initialChambers,
   userRole,
   doctorName,
+  pharmacyName,
 }: ChamberListProps) {
   const [selectedChamber, setSelectedChamber] = useState<Chamber | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { userLocation, error: locationError } = useUserLocation();
   const [chambersWithDistance, setChambersWithDistance] =
-    useState<ChamberWithDistance[]>(chambers);
+    useState<ChamberWithDistance[]>(initialChambers);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (userLocation && userRole === "PATIENT") {
-      const chambersWithDistanceCalculated = chambers.map((chamber) => ({
+      const chambersWithDistanceCalculated = initialChambers.map((chamber) => ({
         ...chamber,
         distance: calculateDistance(
           userLocation.lat,
@@ -80,20 +84,34 @@ export function ChamberList({
         )
       );
     } else {
-      setChambersWithDistance(chambers);
+      setChambersWithDistance(initialChambers);
     }
-  }, [chambers, userLocation, userRole]);
+  }, [initialChambers, userLocation, userRole]);
 
   const handleBookAppointment = (chamber: Chamber) => {
     setSelectedChamber(chamber);
     setDrawerOpen(true);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div>
       {doctorName && (
         <h2 className="text-2xl font-bold mb-6">
           Chambers for Dr. {decodeURIComponent(doctorName)}
+        </h2>
+      )}
+
+      {pharmacyName && (
+        <h2 className="text-2xl font-bold mb-6">
+          Chambers at {decodeURIComponent(pharmacyName)}
         </h2>
       )}
 

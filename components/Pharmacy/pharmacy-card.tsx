@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { MapPin } from "lucide-react";
+import { MapPin, Phone } from "lucide-react";
 
 type PharmacyCardProps = {
   pharmacy: {
@@ -10,6 +10,7 @@ type PharmacyCardProps = {
     name: string;
     businessName: string;
     address: string;
+    phone: string;
     location: {
       latitude: number;
       longitude: number;
@@ -27,6 +28,10 @@ export function PharmacyCard({ pharmacy }: PharmacyCardProps) {
         pharmacy.id
       }&pharmacyName=${encodeURIComponent(pharmacy.businessName)}`
     );
+  };
+
+  const handleCall = () => {
+    window.location.href = `tel:${pharmacy.phone}`;
   };
 
   return (
@@ -52,7 +57,15 @@ export function PharmacyCard({ pharmacy }: PharmacyCardProps) {
               Distance: {pharmacy.distance.toFixed(2)} km
             </p>
           )}
-          <Button className="w-full mt-4" onClick={handleViewChambers}>
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            onClick={handleCall}
+          >
+            <Phone className="h-4 w-4 mr-2" />
+            Call {pharmacy.phone}
+          </Button>
+          <Button className="w-full mt-2" onClick={handleViewChambers}>
             View Available Chambers
           </Button>
         </div>

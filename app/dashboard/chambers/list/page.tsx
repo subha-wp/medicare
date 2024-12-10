@@ -7,6 +7,8 @@ import { ChamberList } from "@/components/chambers/chamber-list";
 interface SearchParams {
   doctorId?: string;
   doctorName?: string;
+  pharmacyId?: string;
+  pharmacyName?: string;
 }
 
 export default async function ChambersListPage({
@@ -14,7 +16,7 @@ export default async function ChambersListPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { doctorId, doctorName } = await searchParams;
+  const { doctorId, doctorName, pharmacyId, pharmacyName } = await searchParams;
   const { user } = await validateRequest();
   if (!user) redirect("/auth/login");
 
@@ -26,6 +28,38 @@ export default async function ChambersListPage({
       chambers = await prisma.chamber.findMany({
         where: {
           doctorId: doctorId,
+          isActive: true,
+        },
+        include: {
+          doctor: {
+            select: {
+              id: true,
+              name: true,
+              specialization: true,
+              qualification: true,
+              avatarUrl: true,
+            },
+          },
+          pharmacy: {
+            select: {
+              name: true,
+              address: true,
+              location: true,
+              businessName: true,
+            },
+          },
+        },
+        orderBy: [
+          {
+            weekDay: "asc",
+          },
+        ],
+      });
+    } else if (pharmacyId) {
+      // Fetch chambers for a specific pharmacy
+      chambers = await prisma.chamber.findMany({
+        where: {
+          pharmacyId: pharmacyId,
           isActive: true,
         },
         include: {
@@ -140,6 +174,7 @@ export default async function ChambersListPage({
           chambers={chambers}
           userRole={user.role}
           doctorName={doctorName}
+          pharmacyName={pharmacyName}
         />
       </div>
     );

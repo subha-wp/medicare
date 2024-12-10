@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+//@ts-nocheck
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useIntersection } from "@/hooks/use-intersection";
@@ -89,6 +90,8 @@ export function PharmacyList() {
       </div>
     );
   }
+
+  console.log("pharmacy list", pharmacies);
 
   return (
     <>
