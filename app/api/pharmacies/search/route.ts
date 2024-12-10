@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { distanceCalculation } from "@/lib/prisma-utils";
+import { Prisma } from "@prisma/client";
+// import { distanceCalculation } from "@/lib/distance";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -26,15 +27,17 @@ export async function GET(request: NextRequest) {
     let pharmacies;
 
     if (lat && lon) {
+      // Using raw query with proper distance calculation
       pharmacies = await prisma.$queryRaw`
         SELECT 
           p.*,
-          ${distanceCalculation(
-            lat,
-            lon,
-            prisma.Prisma.raw("CAST(p.location->'latitude' AS FLOAT)"),
-            prisma.Prisma.raw("CAST(p.location->'longitude' AS FLOAT)")
-          )} as distance
+          ${Prisma.sql`
+            6371 * acos(
+              cos(radians(${lat})) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
+              cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon})) +
+              sin(radians(${lat})) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
+            )
+          `} as distance
         FROM "Pharmacy" p
         WHERE 
           p.name ILIKE ${`%${query}%`} OR
@@ -42,13 +45,10 @@ export async function GET(request: NextRequest) {
           p.address ILIKE ${`%${query}%`}
         ORDER BY distance ASC
         LIMIT ${ITEMS_PER_PAGE + 1}
-        ${
-          cursor
-            ? prisma.Prisma.sql`OFFSET ${parseInt(cursor)}`
-            : prisma.Prisma.empty
-        }
+        ${cursor ? Prisma.sql`OFFSET ${parseInt(cursor)}` : Prisma.sql``}
       `;
     } else {
+      // Without location, just search by text
       pharmacies = await prisma.pharmacy.findMany({
         where: {
           OR: [
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     let nextCursor: string | undefined = undefined;
     if (pharmacies.length > ITEMS_PER_PAGE) {
-      const nextItem = pharmacies.pop();
+      pharmacies.pop();
       nextCursor = cursor
         ? (parseInt(cursor) + ITEMS_PER_PAGE).toString()
         : ITEMS_PER_PAGE.toString();

@@ -1,10 +1,11 @@
+//@ts-nocheck
 import { Prisma } from "@prisma/client";
 
 export const distanceCalculation = (
   lat1: number,
   lon1: number,
-  lat2: number,
-  lon2: number
+  lat2: Prisma.SqlFragment,
+  lon2: Prisma.SqlFragment
 ) => {
   const earthRadiusKm = 6371;
 
