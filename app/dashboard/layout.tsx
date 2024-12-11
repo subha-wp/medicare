@@ -22,7 +22,7 @@ export default async function RootLayout({
 }) {
   const session = await validateRequest();
 
-  if (!session.user) redirect("/auth/login");
+  if (!session.user) redirect("/");
 
   return (
     <SessionProvider value={session}>

@@ -1,11 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { logout } from "@/app/auth/actions";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import UserButton from "./UserButton";
 
 interface UserInfo {
@@ -21,8 +16,6 @@ interface HeaderProps {
 
 export function Header({ user }: HeaderProps) {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
     const fetchUserInfo = async () => {
