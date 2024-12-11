@@ -54,12 +54,12 @@ export default function UserButton({ className }: UserButtonProps) {
             Profile
           </DropdownMenuItem>
         </Link>
-        <Link href={`/dashboard/medical-reports`}>
+        {/* <Link href={`/dashboard/medical-reports`}>
           <DropdownMenuItem>
             <FileText className="mr-2 size-4" />
             Medical Reports
           </DropdownMenuItem>
-        </Link>
+        </Link> */}
 
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>

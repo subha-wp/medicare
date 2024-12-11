@@ -44,7 +44,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-12">
       <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
 
       <Tabs defaultValue="profile" className="space-y-4">
