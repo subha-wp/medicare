@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import UserButton from "./UserButton";
+import { NotificationBell } from "./notifications/notification-bell";
 
 interface UserInfo {
   name?: string;
@@ -52,9 +53,10 @@ export function Header({ user }: HeaderProps) {
     <header className="sticky top-0 z-50 px-2 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="md:mx-6 flex h-14 items-center justify-between">
         <div className="flex">
-          <h1 className="text-lg font-semibold">{getGreeting()}</h1>
+          <h1 className="font-semibold">{getGreeting()}</h1>
         </div>
         <div className="flex items-center space-x-2">
+          <NotificationBell />
           <UserButton />
         </div>
       </div>

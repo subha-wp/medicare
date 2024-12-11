@@ -27,7 +27,32 @@ model User {
 
   // Auth related fields
   sessions       Session[]
+  notifications  Notification[]
 }
+
+// Add Notification model
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum NotificationType {
+  APPOINTMENT_BOOKED
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_COMPLETED
+  MEDICAL_RECORD_ADDED
+  PAYMENT_RECEIVED
+  GENERAL
+}
+
 
 model Session {
   id        String   @id
