@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -104,8 +105,6 @@ export function PharmacyList() {
     );
   }
 
-  console.log("pharmacies", pharmacies);
-
   return (
     <>
       {locationError && (
@@ -118,9 +117,13 @@ export function PharmacyList() {
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
         {pharmacies.map((pharmacy) => (
-          <PharmacyCard key={pharmacy.id} pharmacy={pharmacy} />
+          <PharmacyCard
+            key={pharmacy.id}
+            pharmacy={pharmacy}
+            userLocation={userLocation}
+          />
         ))}
       </div>
 

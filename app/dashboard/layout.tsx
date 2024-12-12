@@ -26,7 +26,7 @@ export default async function RootLayout({
 
   return (
     <SessionProvider value={session}>
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-green-50">
         {session.user && (
           <aside className="w-64 bg-gray-100 border-r hidden md:block">
             <Sidebar user={session.user} />
@@ -34,7 +34,9 @@ export default async function RootLayout({
         )}
         <div className="flex-1 flex flex-col overflow-hidden">
           {session.user && <Header user={session.user} />}
-          <main className="flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
+          <main className="flex-1 overflow-y-auto p-2 md:p-8 mb-12">
+            {children}
+          </main>
           {session.user && <BottomNav userRole={session.user.role} />}
         </div>
       </div>

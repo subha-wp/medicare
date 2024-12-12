@@ -28,7 +28,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
   };
 
   return (
-    <Card className="cursor-pointer hover:shadow-md transition-shadow">
+    <Card className="cursor-pointer hover:shadow-md transition-shadow bg-gradient-to-r from-green-50 to-green-100">
       <CardHeader>
         <CardTitle className="flex items-start justify-between">
           <div className="flex space-x-2">

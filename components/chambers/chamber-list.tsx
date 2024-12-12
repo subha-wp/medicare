@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AppointmentDrawer } from "./appointment-drawer";
 import UserAvatar from "../UserAvatar";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import MapButton from "../MapButton";
 
 type Chamber = {
   id: string;
@@ -164,9 +165,12 @@ export function ChamberList() {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
         {chambers.map((chamber) => (
-          <Card key={chamber.id} className="flex flex-col">
+          <Card
+            key={chamber.id}
+            className="flex flex-col relative bg-gradient-to-r from-green-50 to-green-100"
+          >
             <CardHeader>
               <CardTitle className="flex items-start justify-between">
                 <div className="flex space-x-2">
@@ -175,7 +179,10 @@ export function ChamberList() {
                   />
                   <div className="flex flex-col justify-start">
                     <span className="text-xl">Dr. {chamber.doctor?.name}</span>
-                    <Badge variant="outline" className="max-w-max">
+                    <Badge
+                      variant="outline"
+                      className="max-w-max border-green-500"
+                    >
                       {chamber.doctor?.specialization}
                     </Badge>
                   </div>
@@ -225,6 +232,14 @@ export function ChamberList() {
                 </Button>
               )}
             </CardContent>
+            <div className="absolute top-1 right-1">
+              <MapButton
+                pharmacyLatitude={chamber.pharmacy.location.latitude}
+                pharmacyLongitude={chamber.pharmacy.location.longitude}
+                userLatitude={userLocation ? userLocation.lat : null}
+                userLongitude={userLocation ? userLocation.lon : null}
+              />
+            </div>
           </Card>
         ))}
       </div>

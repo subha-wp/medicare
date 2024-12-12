@@ -7,7 +7,7 @@ export default async function ChambersListPage() {
   if (!user) redirect("/auth/login");
 
   return (
-    <div className="space-y-4 mb-20">
+    <div className="space-y-4">
       <h2 className="text-xl font-bold tracking-tight">Available Chambers</h2>
       <ChamberList />
     </div>

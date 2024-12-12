@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { MapPin, Phone } from "lucide-react";
+import MapButton from "../MapButton";
 
 type PharmacyCardProps = {
   pharmacy: {
@@ -19,7 +20,7 @@ type PharmacyCardProps = {
   };
 };
 
-export function PharmacyCard({ pharmacy }: PharmacyCardProps) {
+export function PharmacyCard({ pharmacy, userLocation }: PharmacyCardProps) {
   const router = useRouter();
 
   const handleViewChambers = () => {
@@ -46,7 +47,7 @@ export function PharmacyCard({ pharmacy }: PharmacyCardProps) {
   };
 
   return (
-    <Card className="cursor-pointer hover:shadow-md transition-shadow">
+    <Card className="cursor-pointer hover:shadow-md transition-shadow relative bg-gradient-to-r from-green-50 to-green-100">
       <CardHeader>
         <CardTitle className="flex items-start justify-between">
           <div className="flex flex-col">
@@ -78,6 +79,14 @@ export function PharmacyCard({ pharmacy }: PharmacyCardProps) {
           </Button>
         </div>
       </CardContent>
+      <div className="absolute top-1 right-1">
+        <MapButton
+          pharmacyLatitude={pharmacy.location.latitude}
+          pharmacyLongitude={pharmacy.location.longitude}
+          userLatitude={userLocation ? userLocation.lat : null}
+          userLongitude={userLocation ? userLocation.lon : null}
+        />
+      </div>
     </Card>
   );
 }
