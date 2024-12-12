@@ -1,11 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useIntersection } from "@/hooks/use-intersection";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { DoctorCard } from "./doctor-card";
 import { Loader2 } from "lucide-react";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 type Doctor = {
   id: string;
@@ -20,60 +19,78 @@ type Doctor = {
 export function DoctorList() {
   const searchParams = useSearchParams();
   const query = searchParams.get("query");
-  const [loading, setLoading] = useState(false);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  // Reference for the last item in the list
-  const lastDoctorRef = useRef<HTMLDivElement>(null);
-  const entry = useIntersection(lastDoctorRef, {
-    threshold: 0,
-    root: null,
-    rootMargin: "0px",
-  });
-
-  const fetchDoctors = async (cursor?: string) => {
+  const loadMore = async () => {
     try {
-      setLoading(true);
       const params = new URLSearchParams();
       if (query) params.set("q", query);
-      if (cursor) params.set("cursor", cursor);
+      params.set("page", (currentPage + 1).toString());
 
       const response = await fetch(`/api/doctors/search?${params.toString()}`);
       const data = await response.json();
 
-      if (!cursor) {
-        setDoctors(data.doctors);
-      } else {
-        setDoctors((prev) => [...prev, ...data.doctors]);
+      if (data.error) {
+        console.error(data.error);
+        return;
       }
 
-      setNextCursor(data.nextCursor);
+      setDoctors((prev) => [...prev, ...data.doctors]);
       setHasMore(data.hasMore);
+      setCurrentPage((prev) => prev + 1);
     } catch (error) {
-      console.error("Error fetching doctors:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error loading more doctors:", error);
     }
   };
 
-  // Initial fetch
+  const { loadMoreRef, loading } = useInfiniteScroll({
+    onLoadMore: loadMore,
+    hasMore,
+  });
+
   useEffect(() => {
-    setDoctors([]);
-    setNextCursor(null);
-    setHasMore(true);
-    fetchDoctors();
+    const fetchInitialDoctors = async () => {
+      try {
+        setInitialLoading(true);
+        const params = new URLSearchParams();
+        if (query) params.set("q", query);
+        params.set("page", "1");
+
+        const response = await fetch(
+          `/api/doctors/search?${params.toString()}`
+        );
+        const data = await response.json();
+
+        if (data.error) {
+          console.error(data.error);
+          return;
+        }
+
+        setDoctors(data.doctors);
+        setHasMore(data.hasMore);
+        setCurrentPage(1);
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchInitialDoctors();
   }, [query]);
 
-  // Fetch more when scrolling to bottom
-  useEffect(() => {
-    if (entry?.isIntersecting && hasMore && !loading && nextCursor) {
-      fetchDoctors(nextCursor);
-    }
-  }, [entry?.isIntersecting, hasMore, loading, nextCursor]);
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
-  if (doctors.length === 0 && !loading) {
+  if (doctors.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No doctors found.
@@ -84,16 +101,13 @@ export function DoctorList() {
   return (
     <>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {doctors.map((doctor, index) => (
-          <div
-            key={doctor.id}
-            ref={index === doctors.length - 1 ? lastDoctorRef : null}
-          >
-            <DoctorCard doctor={doctor} />
-          </div>
+        {doctors.map((doctor) => (
+          <DoctorCard key={doctor.id} doctor={doctor} />
         ))}
       </div>
 
+      {/* Loading indicator and intersection observer target */}
+      <div ref={loadMoreRef} className="h-1" />
       {loading && (
         <div className="flex justify-center py-4">
           <Loader2 className="h-6 w-6 animate-spin" />

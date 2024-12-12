@@ -1,18 +1,17 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-//@ts-nocheck
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { useIntersection } from "@/hooks/use-intersection";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PharmacyCard } from "./pharmacy-card";
 import { Loader2 } from "lucide-react";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 type Pharmacy = {
   id: string;
   name: string;
   businessName: string;
   address: string;
+  phone: string;
   location: {
     latitude: number;
     longitude: number;
@@ -23,26 +22,17 @@ type Pharmacy = {
 export function PharmacyList() {
   const searchParams = useSearchParams();
   const query = searchParams.get("query");
-  const [loading, setLoading] = useState(false);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [initialLoading, setInitialLoading] = useState(true);
   const { userLocation, error: locationError } = useUserLocation();
 
-  // Reference for the last item in the list
-  const lastPharmacyRef = useRef<HTMLDivElement>(null);
-  const entry = useIntersection(lastPharmacyRef, {
-    threshold: 0,
-    root: null,
-    rootMargin: "0px",
-  });
-
-  const fetchPharmacies = async (cursor?: string) => {
+  const loadMore = async () => {
     try {
-      setLoading(true);
       const params = new URLSearchParams();
       if (query) params.set("q", query);
-      if (cursor) params.set("cursor", cursor);
+      params.set("page", (currentPage + 1).toString());
       if (userLocation) {
         params.set("lat", userLocation.lat.toString());
         params.set("lon", userLocation.lon.toString());
@@ -53,45 +43,66 @@ export function PharmacyList() {
       );
       const data = await response.json();
 
-      if (!cursor) {
-        setPharmacies(data.pharmacies);
-      } else {
-        setPharmacies((prev) => [...prev, ...data.pharmacies]);
+      if (data.error) {
+        console.error(data.error);
+        return;
       }
 
-      setNextCursor(data.nextCursor);
+      setPharmacies((prev) => [...prev, ...data.pharmacies]);
       setHasMore(data.hasMore);
+      setCurrentPage((prev) => prev + 1);
     } catch (error) {
-      console.error("Error fetching pharmacies:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error loading more pharmacies:", error);
     }
   };
 
-  // Initial fetch
+  const { loadMoreRef, loading } = useInfiniteScroll({
+    onLoadMore: loadMore,
+    hasMore,
+  });
+
   useEffect(() => {
-    setPharmacies([]);
-    setNextCursor(null);
-    setHasMore(true);
-    fetchPharmacies();
+    const fetchInitialPharmacies = async () => {
+      try {
+        setInitialLoading(true);
+        const params = new URLSearchParams();
+        if (query) params.set("q", query);
+        params.set("page", "1");
+        if (userLocation) {
+          params.set("lat", userLocation.lat.toString());
+          params.set("lon", userLocation.lon.toString());
+        }
+
+        const response = await fetch(
+          `/api/pharmacies/search?${params.toString()}`
+        );
+        const data = await response.json();
+
+        if (data.error) {
+          console.error(data.error);
+          return;
+        }
+
+        setPharmacies(data.pharmacies);
+        setHasMore(data.hasMore);
+        setCurrentPage(1);
+      } catch (error) {
+        console.error("Error fetching pharmacies:", error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchInitialPharmacies();
   }, [query, userLocation]);
 
-  // Fetch more when scrolling to bottom
-  useEffect(() => {
-    if (entry?.isIntersecting && hasMore && !loading && nextCursor) {
-      fetchPharmacies(nextCursor);
-    }
-  }, [entry?.isIntersecting, hasMore, loading, nextCursor]);
-
-  if (pharmacies.length === 0 && !loading) {
+  if (initialLoading) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        No pharmacies found.
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
-
-  console.log("pharmacy list", pharmacies);
 
   return (
     <>
@@ -104,20 +115,24 @@ export function PharmacyList() {
           information.
         </div>
       )}
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {pharmacies.map((pharmacy, index) => (
-          <div
-            key={pharmacy.id}
-            ref={index === pharmacies.length - 1 ? lastPharmacyRef : null}
-          >
-            <PharmacyCard pharmacy={pharmacy} />
-          </div>
+        {pharmacies.map((pharmacy) => (
+          <PharmacyCard key={pharmacy.id} pharmacy={pharmacy} />
         ))}
       </div>
 
+      {/* Loading indicator and intersection observer target */}
+      <div ref={loadMoreRef} className="h-1" />
       {loading && (
         <div className="flex justify-center py-4">
           <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      )}
+
+      {pharmacies.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          No pharmacies found.
         </div>
       )}
     </>

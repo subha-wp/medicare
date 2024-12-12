@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 5;
 
 export async function GET(request: NextRequest) {
   const { user } = await validateRequest();
@@ -14,41 +14,49 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || "";
     const page = parseInt(searchParams.get("page") || "1");
-    const cursor = searchParams.get("cursor") || undefined;
+    const skip = (page - 1) * ITEMS_PER_PAGE;
 
-    const doctors = await prisma.doctor.findMany({
-      where: {
-        OR: [
-          { name: { contains: query, mode: "insensitive" } },
-          { specialization: { contains: query, mode: "insensitive" } },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        specialization: true,
-        qualification: true,
-        experience: true,
-        about: true,
-        avatarUrl: true,
-      },
-      take: ITEMS_PER_PAGE + 1,
-      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
-      orderBy: {
-        name: "asc",
-      },
-    });
+    const [doctors, total] = await Promise.all([
+      prisma.doctor.findMany({
+        where: {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { specialization: { contains: query, mode: "insensitive" } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          specialization: true,
+          qualification: true,
+          experience: true,
+          about: true,
+          avatarUrl: true,
+        },
+        take: ITEMS_PER_PAGE,
+        skip,
+        orderBy: {
+          name: "asc",
+        },
+      }),
+      prisma.doctor.count({
+        where: {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { specialization: { contains: query, mode: "insensitive" } },
+          ],
+        },
+      }),
+    ]);
 
-    let nextCursor: typeof cursor | undefined = undefined;
-    if (doctors.length > ITEMS_PER_PAGE) {
-      const nextItem = doctors.pop();
-      nextCursor = nextItem?.id;
-    }
+    const hasMore = skip + doctors.length < total;
+    const nextPage = hasMore ? page + 1 : null;
 
     return NextResponse.json({
       doctors,
-      nextCursor,
-      hasMore: doctors.length === ITEMS_PER_PAGE,
+      hasMore,
+      nextPage,
+      total,
     });
   } catch (error) {
     console.error("Error searching doctors:", error);
