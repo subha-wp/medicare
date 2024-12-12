@@ -104,6 +104,8 @@ export function PharmacyList() {
     );
   }
 
+  console.log("pharmacies", pharmacies);
+
   return (
     <>
       {locationError && (
