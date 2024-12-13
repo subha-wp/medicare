@@ -113,8 +113,8 @@ model Pharmacy {
   address       String
   location      Json      // Stores latitude and longitude
   gstin         String?
-  tradeLicense  String
-  documents     Json      // Stores document URLs
+  tradeLicense  String?
+  documents     Json?      // Stores document URLs
   user          User      @relation(fields: [userId], references: [id])
   avatarUrl     String?
 

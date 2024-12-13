@@ -25,7 +25,8 @@ export function PharmacyFields({ form }: PharmacyFieldsProps) {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
+          const latitude = parseFloat(position.coords.latitude.toFixed(7));
+          const longitude = parseFloat(position.coords.longitude.toFixed(7));
           form.setValue("profile.location.latitude", latitude);
           form.setValue("profile.location.longitude", longitude);
           setIsLocating(false);
@@ -40,6 +41,7 @@ export function PharmacyFields({ form }: PharmacyFieldsProps) {
       setIsLocating(false);
     }
   };
+
   return (
     <>
       <FormField
@@ -105,7 +107,15 @@ export function PharmacyFields({ form }: PharmacyFieldsProps) {
             <FormItem>
               <FormLabel>Latitude</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Latitude" readOnly />
+                <Input
+                  {...field}
+                  placeholder="Enter latitude"
+                  type="number"
+                  step="any"
+                  onChange={(e) =>
+                    field.onChange(parseFloat(e.target.value) || "")
+                  }
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,7 +128,15 @@ export function PharmacyFields({ form }: PharmacyFieldsProps) {
             <FormItem>
               <FormLabel>Longitude</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Longitude" readOnly />
+                <Input
+                  {...field}
+                  placeholder="Enter longitude"
+                  type="number"
+                  step="any"
+                  onChange={(e) =>
+                    field.onChange(parseFloat(e.target.value) || "")
+                  }
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -154,9 +172,12 @@ export function PharmacyFields({ form }: PharmacyFieldsProps) {
         name="profile.tradeLicense"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Trade License</FormLabel>
+            <FormLabel>Trade License (Optional)</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Enter your trade license number" />
+              <Input
+                {...field}
+                placeholder="Enter your trade license number (optional)"
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -168,12 +189,12 @@ export function PharmacyFields({ form }: PharmacyFieldsProps) {
         name="profile.documents.tradeLicenseDoc"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Trade License Document</FormLabel>
+            <FormLabel>Trade License Document (Optional)</FormLabel>
             <FormControl>
               <FileUpload
                 value={field.value}
                 onChange={field.onChange}
-                label="Trade License Document"
+                label="Trade License Document (Optional)"
               />
             </FormControl>
             <FormMessage />

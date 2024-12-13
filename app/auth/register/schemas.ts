@@ -46,9 +46,9 @@ export const pharmacySchema = baseProfileSchema.extend({
     longitude: z.number(),
   }),
   gstin: z.string().optional(),
-  tradeLicense: z.string().min(1, "Trade license is required"),
+  tradeLicense: z.string().optional(),
   documents: z.object({
-    tradeLicenseDoc: z.string().min(1, "Trade license document is required"),
+    tradeLicenseDoc: z.string().optional(),
     gstinDoc: z.string().optional(),
   }),
 });
