@@ -38,6 +38,8 @@ type Chamber = {
     };
   };
   distance: number | null;
+  isVerified?: boolean;
+  verificationDate?: string | null;
 };
 
 export function ChamberList() {
@@ -101,9 +103,8 @@ export function ChamberList() {
           params.set("lon", userLocation.lon.toString());
         }
 
-        const response = await fetch(
-          `/api/chambers/search?${params.toString()}`
-        );
+        // Use the all chambers endpoint to show both verified and unverified
+        const response = await fetch(`/api/chambers/all?${params.toString()}`);
         const data = await response.json();
 
         if (data.error) {
@@ -222,8 +223,21 @@ export function ChamberList() {
                 <p className="text-sm font-medium mt-2">
                   Consultation Fee: ₹{chamber?.fees}
                 </p>
+
+                {/* Verification Status */}
+                <div className="mt-2">
+                  {chamber.isVerified ? (
+                    <Badge variant="default" className="bg-green-600">
+                      ✓ Verified
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive">
+                      ⚠ Online Booking Not Avaiable
+                    </Badge>
+                  )}
+                </div>
               </div>
-              {userRole === "PATIENT" && (
+              {userRole === "PATIENT" && chamber.isVerified && (
                 <Button
                   className="w-full mt-4"
                   onClick={() => handleBookAppointment(chamber)}
@@ -231,6 +245,13 @@ export function ChamberList() {
                   Book Appointment
                 </Button>
               )}
+              {/* {userRole === "PATIENT" && !chamber.isVerified && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800">
+                    Online Booking is not available.
+                  </p>
+                </div>
+              )} */}
             </CardContent>
             <div className="absolute top-1 right-1">
               <MapButton

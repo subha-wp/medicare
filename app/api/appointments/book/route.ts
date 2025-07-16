@@ -32,13 +32,13 @@ export async function POST(request: Request) {
   try {
     // Check if the chamber exists and is active
     const chamber = await prisma.chamber.findUnique({
-      where: { id: chamberId, isActive: true },
+      where: { id: chamberId, isActive: true, isVerified: true },
       include: { doctor: true, pharmacy: true },
     });
 
     if (!chamber) {
       return NextResponse.json(
-        { error: "Chamber not found or inactive" },
+        { error: "Chamber not found, inactive, or not verified" },
         { status: 404 }
       );
     }

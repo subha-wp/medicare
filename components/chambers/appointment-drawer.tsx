@@ -41,6 +41,7 @@ type Chamber = {
     name: string;
     address: string;
   };
+  isVerified?: boolean;
 };
 
 interface AppointmentDrawerProps {
@@ -317,12 +318,25 @@ export function AppointmentDrawer({
                 onClick={handleBookAppointment}
                 disabled={
                   loading ||
+                  !chamber.isVerified ||
                   !selectedDate ||
                   getAvailableSlots(selectedDate) <= 0
                 }
               >
-                {loading ? "Booking..." : "Confirm Booking"}
+                {loading
+                  ? "Booking..."
+                  : !chamber.isVerified
+                  ? "Chamber Not Verified"
+                  : "Confirm Booking"}
               </Button>
+
+              {!chamber.isVerified && (
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800">
+                    This chamber is not yet verified and cannot accept bookings.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

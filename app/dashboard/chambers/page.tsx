@@ -25,6 +25,9 @@ type Chamber = {
   endTime: string;
   fees: number;
   isActive: boolean;
+  isVerified: boolean;
+  verificationDate: string | null;
+  verificationNotes: string | null;
   doctor: {
     name: string;
     specialization: string;
@@ -44,6 +47,10 @@ export default function ChambersPage() {
   const [loading, setLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [chamberToDelete, setChamberToDelete] = useState<string | null>(null);
+  const [verificationDialog, setVerificationDialog] = useState<{
+    open: boolean;
+    chamber: Chamber | null;
+  }>({ open: false, chamber: null });
 
   useEffect(() => {
     fetchChambers();
@@ -87,6 +94,48 @@ export default function ChambersPage() {
     } catch (error) {
       console.error("Error updating chamber status:", error);
       toast.error("Failed to update chamber status");
+    }
+  };
+
+  const toggleVerificationStatus = async (
+    chamberId: string,
+    isVerified: boolean
+  ) => {
+    try {
+      const response = await fetch("/api/chambers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chamberId,
+          isVerified,
+          verificationNotes: isVerified
+            ? "Verified by pharmacy"
+            : "Verification removed",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update verification status");
+      }
+
+      setChambers((prevChambers) =>
+        prevChambers.map((chamber) =>
+          chamber.id === chamberId
+            ? {
+                ...chamber,
+                isVerified,
+                verificationDate: isVerified ? new Date().toISOString() : null,
+              }
+            : chamber
+        )
+      );
+
+      toast.success(
+        `Chamber ${isVerified ? "verified" : "unverified"} successfully`
+      );
+    } catch (error) {
+      console.error("Error updating verification status:", error);
+      toast.error("Failed to update verification status");
     }
   };
 
@@ -165,6 +214,28 @@ export default function ChambersPage() {
                   <Badge variant={chamber.isActive ? "default" : "destructive"}>
                     {chamber.isActive ? "Active" : "Inactive"}
                   </Badge>
+                  <Badge
+                    variant={chamber.isVerified ? "default" : "secondary"}
+                    className={
+                      chamber.isVerified ? "bg-green-600" : "bg-yellow-600"
+                    }
+                  >
+                    {chamber.isVerified ? "✓ Verified" : "⚠ Unverified"}
+                  </Badge>
+                </div>
+
+                <div className="flex justify-between mt-2">
+                  <Button
+                    variant={chamber.isVerified ? "destructive" : "default"}
+                    size="sm"
+                    onClick={() =>
+                      toggleVerificationStatus(chamber.id, !chamber.isVerified)
+                    }
+                  >
+                    {chamber.isVerified
+                      ? "Remove Verification"
+                      : "Verify Chamber"}
+                  </Button>
                   <Button
                     variant="destructive"
                     size="sm"

@@ -64,6 +64,7 @@ export async function GET(request: Request) {
           },
         },
       },
+      orderBy: [{ isVerified: "desc" }, { createdAt: "desc" }],
     });
 
     return NextResponse.json({ chambers });
@@ -78,19 +79,34 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   const { user } = await validateRequest();
-  // console.log("Role", user.role);
 
   if (!user || user.role !== "PHARMACY") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
-  const { chamberId, isActive } = body;
+  const { chamberId, isActive, isVerified, verificationNotes } = body;
+
+  // Only allow pharmacy to update isActive, verification should be handled by admin
+  const updateData: any = {};
+
+  if (typeof isActive === "boolean") {
+    updateData.isActive = isActive;
+  }
+
+  // For now, allow pharmacy to self-verify (in production, this should be admin-only)
+  if (typeof isVerified === "boolean") {
+    updateData.isVerified = isVerified;
+    updateData.verificationDate = isVerified ? new Date() : null;
+    if (verificationNotes) {
+      updateData.verificationNotes = verificationNotes;
+    }
+  }
 
   try {
     const updatedChamber = await prisma.chamber.update({
       where: { id: chamberId },
-      data: { isActive },
+      data: updateData,
     });
 
     return NextResponse.json({ success: true, chamber: updatedChamber });
@@ -191,6 +207,14 @@ export async function POST(request: Request) {
         fees,
         slotDuration,
         maxSlots,
+      },
+      include: {
+        doctor: {
+          select: {
+            name: true,
+            specialization: true,
+          },
+        },
       },
     });
 

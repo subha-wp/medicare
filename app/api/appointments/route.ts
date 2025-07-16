@@ -49,6 +49,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Chamber not found" }, { status: 404 });
     }
 
+    // Check if chamber is verified
+    if (!chamber.isVerified) {
+      return NextResponse.json(
+        { error: "This chamber is not verified and cannot accept bookings" },
+        { status: 400 }
+      );
+    }
+
     // Check if the slot is available
     const existingAppointment = await prisma.appointment.findFirst({
       where: {

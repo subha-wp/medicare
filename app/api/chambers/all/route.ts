@@ -1,10 +1,10 @@
-//@ts-nocheck
+// @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 export async function GET(request: NextRequest) {
   const { user } = await validateRequest();
@@ -28,11 +28,11 @@ export async function GET(request: NextRequest) {
     let total;
 
     if (lat && lon) {
-      // Using raw query with proper distance calculation
+      // Using raw query with proper distance calculation - showing ALL chambers
       const result = await prisma.$queryRaw`
     WITH ChambersWithDistance AS (
       SELECT 
-        c.id, c."weekNumber", c."weekDay", c."startTime", c."endTime", c.fees, c."maxSlots",
+        c.id, c."weekNumber", c."weekDay", c."startTime", c."endTime", c.fees, c."maxSlots", c."isVerified", c."verificationDate",
         d.id as "doctorId", d.name as "doctorName", d.specialization, d.qualification, d."avatarUrl",
         p.name as "pharmacyName", p.address, p."businessName", p.location,
         ${Prisma.sql`
@@ -47,14 +47,13 @@ export async function GET(request: NextRequest) {
       JOIN "Pharmacy" p ON c."pharmacyId" = p.id
       WHERE 
         c."isActive" = true AND
-        c."isVerified" = true AND
         (d.name ILIKE ${`%${query}%`} OR
         d.specialization ILIKE ${`%${query}%`} OR
         p.name ILIKE ${`%${query}%`} OR
         p.address ILIKE ${`%${query}%`})
     )
     SELECT 
-      id, "weekNumber", "weekDay", "startTime", "endTime", fees, "maxSlots",
+      id, "weekNumber", "weekDay", "startTime", "endTime", fees, "maxSlots", "isVerified", "verificationDate",
       json_build_object(
         'id', "doctorId",
         'name', "doctorName",
@@ -70,7 +69,7 @@ export async function GET(request: NextRequest) {
       ) as pharmacy,
       distance
     FROM ChambersWithDistance
-    ORDER BY distance ASC
+    ORDER BY "isVerified" DESC, distance ASC
     LIMIT ${ITEMS_PER_PAGE}
     OFFSET ${skip};
   `;
@@ -82,7 +81,6 @@ export async function GET(request: NextRequest) {
     JOIN "Pharmacy" p ON c."pharmacyId" = p.id
     WHERE 
       c."isActive" = true AND
-      c."isVerified" = true AND
       (d.name ILIKE ${`%${query}%`} OR
       d.specialization ILIKE ${`%${query}%`} OR
       p.name ILIKE ${`%${query}%`} OR
@@ -96,7 +94,6 @@ export async function GET(request: NextRequest) {
         prisma.chamber.findMany({
           where: {
             isActive: true,
-            isVerified: true,
             OR: [
               { doctor: { name: { contains: query, mode: "insensitive" } } },
               {
@@ -131,16 +128,18 @@ export async function GET(request: NextRequest) {
           },
           take: ITEMS_PER_PAGE,
           skip,
-          orderBy: {
-            doctor: {
-              name: "asc",
+          orderBy: [
+            { isVerified: "desc" },
+            {
+              doctor: {
+                name: "asc",
+              },
             },
-          },
+          ],
         }),
         prisma.chamber.count({
           where: {
             isActive: true,
-            isVerified: true,
             OR: [
               { doctor: { name: { contains: query, mode: "insensitive" } } },
               {
@@ -174,7 +173,7 @@ export async function GET(request: NextRequest) {
       userRole: user.role,
     });
   } catch (error) {
-    console.error("Error searching chambers:", error);
+    console.error("Error searching all chambers:", error);
     return NextResponse.json(
       { error: "Failed to search chambers" },
       { status: 500 }
