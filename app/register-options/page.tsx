@@ -8,7 +8,7 @@ export default function RegisterOptions() {
       {/* Header */}
       <header className="bg-white shadow-sm p-4">
         <h1 className="text-2xl font-bold text-center text-green-600">
-          MediCare
+          BookMyChamber
         </h1>
       </header>
 
