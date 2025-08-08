@@ -51,7 +51,7 @@ export function PharmacyCard({ pharmacy, userLocation }: PharmacyCardProps) {
       <CardHeader>
         <CardTitle className="flex items-start justify-between">
           <div className="flex flex-col">
-            <span className="text-xl">{pharmacy.businessName}</span>
+            <span className="text-lg">{pharmacy.businessName}</span>
           </div>
         </CardTitle>
       </CardHeader>

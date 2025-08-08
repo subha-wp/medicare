@@ -24,7 +24,7 @@ export default function RootLayout({
       <body
         className={cn(
           inter.className, // Apply Inter font class if needed
-          "min-h-screen bg-background antialiased"
+          "min-h-screen  antialiased"
         )}
       >
         <ThemeProvider

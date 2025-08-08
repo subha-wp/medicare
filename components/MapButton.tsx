@@ -50,7 +50,7 @@ export default function MapButton({
         onClick={openMaps}
         aria-label="Open in Maps"
       >
-        <MapPin className="h-5 w-5 text-green-500" />
+        <MapPin className="h-4 w-4 text-green-500" />
       </Button>
     </div>
   );

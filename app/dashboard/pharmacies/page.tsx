@@ -12,8 +12,10 @@ export default async function PharmaciesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold tracking-tight">Find Pharmacies</h2>
-        <p className="text-muted-foreground">Search for pharmacies near you</p>
+        <h2 className="text-xl font-bold tracking-tight">Find Pharmacies</h2>
+        <p className="text-muted-foreground text-sm">
+          Search for pharmacies near you
+        </p>
       </div>
 
       <PharmacySearch />

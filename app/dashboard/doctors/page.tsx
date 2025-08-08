@@ -11,8 +11,8 @@ export default async function DoctorsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold tracking-tight">Find Doctors</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-xl font-bold tracking-tight">Find Doctors</h2>
+        <p className="text-muted-foreground text-sm">
           Search for doctors by name or specialization
         </p>
       </div>

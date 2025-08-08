@@ -29,7 +29,7 @@ export function PharmacySearch() {
 
   return (
     <div className="w-full max-w-xl relative">
-      <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+      <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground text-sm" />
       <Input
         type="search"
         placeholder="Search by name or location..."

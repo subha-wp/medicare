@@ -46,8 +46,8 @@ export function ChamberSearch() {
         <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search chambers by doctor, specialization, or location..."
-          className="h-12 pl-10"
+          placeholder="chambers by doctor, specialization, location..."
+          className="h-12 pl-10 text-xs"
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />

@@ -34,7 +34,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
           <div className="flex space-x-2">
             <UserAvatar avatarUrl={doctor.avatarUrl} />
             <div className="flex flex-col">
-              <span className="text-xl">Dr. {doctor.name}</span>
+              <span className="text-lg">Dr. {doctor.name}</span>
               <Badge variant="outline" className="max-w-max">
                 {doctor.specialization}
               </Badge>

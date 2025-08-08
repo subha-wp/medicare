@@ -179,7 +179,7 @@ export function ChamberList() {
                     avatarUrl={chamber.doctor?.avatarUrl || undefined}
                   />
                   <div className="flex flex-col justify-start">
-                    <span className="text-xl">Dr. {chamber.doctor?.name}</span>
+                    <span className="text-lg">Dr. {chamber.doctor?.name}</span>
                     <Badge
                       variant="outline"
                       className="max-w-max border-green-500"
