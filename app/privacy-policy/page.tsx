@@ -5,8 +5,8 @@ const PrivacyPolicy = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <Head>
-        <title>Privacy Policy - MediCare</title>
-        <meta name="description" content="MediCare Privacy Policy" />
+        <title>Privacy Policy - BookMyChamber</title>
+        <meta name="description" content="BookMyChamber Privacy Policy" />
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
@@ -17,7 +17,7 @@ const PrivacyPolicy = () => {
       </p>
 
       <p className="text-lg mb-4">
-        At <strong>MediCare</strong>, we are committed to protecting your
+        At <strong>BookMyChamber</strong>, we are committed to protecting your
         privacy. This Privacy Policy explains how we collect, use, and safeguard
         your personal data when you use our app and services.
       </p>
@@ -86,7 +86,7 @@ const PrivacyPolicy = () => {
           <li>Withdraw consent for data processing, where applicable.</li>
         </ul>
         To exercise any of these rights, please contact us through the app or at{" "}
-        <strong>support@medicareapp.com</strong>.
+        <strong>support@BookMyChamberapp.com</strong>.
       </p>
 
       <h2 className="text-2xl font-semibold mt-6 mb-4">
@@ -104,7 +104,7 @@ const PrivacyPolicy = () => {
         we handle your personal data, please contact us at:
       </p>
       <p className="text-lg">
-        <strong>Email:</strong> support@medicareapp.com
+        <strong>Email:</strong> support@BookMyChamberapp.com
       </p>
     </div>
   );
