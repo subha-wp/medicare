@@ -115,7 +115,13 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            <div className="">
+            <div className="grid grid-cols-2 gap-3">
+              <Link href="/dashboard/chambers/list">
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white h-12 rounded-xl">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Book Now
+                </Button>
+              </Link>
               <Link href="/dashboard/appointments">
                 <Button
                   variant="outline"
