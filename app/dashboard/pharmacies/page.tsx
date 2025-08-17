@@ -10,9 +10,9 @@ export default async function PharmaciesPage() {
   if (user.role !== "PATIENT") redirect("/dashboard");
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold tracking-tight">Find Pharmacies</h2>
+    <div className="space-y-2 p-2">
+      <div className="flex flex-col">
+        <h2 className="font-bold tracking-tight">Find Pharmacies</h2>
         <p className="text-muted-foreground text-sm">
           Search for pharmacies near you
         </p>

@@ -25,15 +25,15 @@ export default async function AppointmentsPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-2">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Appointments</h2>
+        <h2 className=" font-bold tracking-tight">Appointments</h2>
         {user.role === "PATIENT" && (
           <Link
             href="/dashboard/chambers/list"
-            className="bg-black rounded-full"
+            className="bg-green-500 rounded-full"
           >
-            <Plus color="white" size={28} />
+            <Plus color="white" size={24} />
           </Link>
         )}
       </div>

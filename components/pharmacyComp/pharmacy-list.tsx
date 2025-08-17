@@ -99,25 +99,46 @@ export function PharmacyList() {
 
   if (initialLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex flex-col items-center justify-center h-64">
+        <div className="relative">
+          <div className="w-16 h-16 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mb-4">
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-200 to-teal-200 rounded-full animate-ping opacity-20"></div>
+        </div>
+        <p className="text-emerald-700 font-medium">
+          Finding nearby pharmacies...
+        </p>
+        <p className="text-emerald-600 text-sm mt-1">Please wait a moment</p>
       </div>
     );
   }
 
   return (
-    <>
+    <div className="space-y-4">
       {locationError && (
         <div
-          className="mb-4 p-4 bg-yellow-100 text-yellow-800 rounded"
+          className="mx-4 p-4  border border-amber-200 rounded-xl shadow-sm"
           role="alert"
         >
-          {locationError}. Pharmacies will be shown without distance
-          information.
+          <div className="flex items-start space-x-3">
+            <div className="w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+            </div>
+            <div>
+              <p className="text-amber-800 font-medium text-sm">
+                Location Access Limited
+              </p>
+              <p className="text-amber-700 text-sm mt-1">
+                {locationError}. Pharmacies will be shown without distance
+                information.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+      <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
         {pharmacies.map((pharmacy) => (
           <PharmacyCard
             key={pharmacy.id}
@@ -127,19 +148,34 @@ export function PharmacyList() {
         ))}
       </div>
 
-      {/* Loading indicator and intersection observer target */}
       <div ref={loadMoreRef} className="h-1" />
       {loading && (
-        <div className="flex justify-center py-4">
-          <Loader2 className="h-6 w-6 animate-spin" />
+        <div className="flex justify-center py-6">
+          <div className="flex items-center space-x-3 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-3 rounded-full border border-emerald-100">
+            <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
+            <span className="text-emerald-700 font-medium text-sm">
+              Loading more pharmacies...
+            </span>
+          </div>
         </div>
       )}
 
       {pharmacies.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          No pharmacies found.
+        <div className="text-center py-12 px-4">
+          <div className="w-20 h-20 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-10 h-10 bg-gradient-to-r from-emerald-200 to-teal-200 rounded-full flex items-center justify-center">
+              <div className="w-4 h-4 bg-emerald-400 rounded-full"></div>
+            </div>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            No Pharmacies Found
+          </h3>
+          <p className="text-gray-600 max-w-sm mx-auto">
+            We couldn&rsquo;t find any pharmacies matching your search. Try
+            adjusting your search terms or location.
+          </p>
         </div>
       )}
-    </>
+    </div>
   );
 }

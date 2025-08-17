@@ -8,8 +8,8 @@ export default async function ChambersListPage() {
   if (!user) redirect("/auth/login");
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold tracking-tight">Available Chambers</h2>
+    <div className="space-y-3 p-2">
+      <h2 className="font-bold tracking-tight">Available Chambers</h2>
       <ChamberSearch />
       <ChamberList />
     </div>

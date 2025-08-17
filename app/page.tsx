@@ -127,7 +127,7 @@ function FeatureItem({
 }) {
   return (
     <div className="flex items-center space-x-4">
-      <div className="bg-green-100 rounded-full p-3">{icon}</div>
+      <div className=" rounded-full p-3">{icon}</div>
       <div>
         <h3 className="font-semibold">{title}</h3>
         <p className="text-sm text-gray-600">{description}</p>
