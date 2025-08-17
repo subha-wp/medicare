@@ -39,7 +39,7 @@ export async function GET(
       },
       orderBy: [
         {
-          weekDay: "asc",
+          weekDays: "asc",
         },
       ],
     });
