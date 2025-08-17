@@ -17,13 +17,39 @@ import {
 } from "lucide-react";
 import React from "react";
 import Link from "next/link";
+import UserButton from "@/components/UserButton";
 
 export default async function DashboardPage() {
   const { user } = await validateRequest();
   if (!user) redirect("/auth/login");
 
   let stats;
-  let userName = user.name || "User";
+  let userName = "User";
+
+  // Get the actual user name from the profile based on role
+  switch (user.role) {
+    case "PATIENT":
+      const patient = await prisma.patient.findUnique({
+        where: { userId: user.id },
+        select: { name: true },
+      });
+      userName = patient?.name || "User";
+      break;
+    case "DOCTOR":
+      const doctor = await prisma.doctor.findUnique({
+        where: { userId: user.id },
+        select: { name: true },
+      });
+      userName = doctor?.name || "User";
+      break;
+    case "PHARMACY":
+      const pharmacy = await prisma.pharmacy.findUnique({
+        where: { userId: user.id },
+        select: { name: true },
+      });
+      userName = pharmacy?.name || "User";
+      break;
+  }
 
   switch (user.role) {
     case "PATIENT":
@@ -55,7 +81,7 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <Stethoscope className="w-8 h-8 text-white" />
+              <UserButton />
             </div>
           </div>
 
