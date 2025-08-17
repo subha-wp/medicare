@@ -25,12 +25,14 @@ import { Badge } from "../ui/badge";
 
 type Chamber = {
   id: string;
-  weekNumber: "FIRST" | "SECOND" | "THIRD" | "FOURTH" | "LAST";
-  weekDay: string;
+  weekNumbers: ("FIRST" | "SECOND" | "THIRD" | "FOURTH" | "LAST")[];
+  weekDays: string[];
+  scheduleType: "WEEKLY_RECURRING" | "MULTI_WEEKLY" | "MONTHLY_SPECIFIC";
   startTime: string;
   endTime: string;
   fees: number;
   maxSlots: number;
+  slotDuration: number;
   doctor: {
     avatarUrl: string | null | undefined;
     name: string;
@@ -72,31 +74,57 @@ function getWeekNumberOfMonth(
   return "LAST";
 }
 
-function getNextValidDates(chamber: Chamber, count: number = 3): Date[] {
+function getNextValidDates(chamber: Chamber, count: number = 6): Date[] {
   const dates: Date[] = [];
   let currentDate = new Date();
+  let attempts = 0;
+  const maxAttempts = 365; // Prevent infinite loop
 
-  while (dates.length < count) {
-    // Find the next occurrence of the weekday
-    while (
-      currentDate.getDay() !==
-      weekDays[chamber.weekDay as keyof typeof weekDays]
+  while (dates.length < count && attempts < maxAttempts) {
+    attempts++;
+
+    if (
+      chamber.scheduleType === "WEEKLY_RECURRING" ||
+      chamber.scheduleType === "MULTI_WEEKLY"
     ) {
+      // Check if current day matches any of the weekDays
+      const currentDayName = Object.keys(weekDays).find(
+        (key) => weekDays[key as keyof typeof weekDays] === currentDate.getDay()
+      );
+
+      if (currentDayName && chamber.weekDays.includes(currentDayName)) {
+        // Check if it's not past the chamber time for today
+        if (
+          !isSameDay(currentDate, new Date()) ||
+          !isTimePassed(chamber, currentDate)
+        ) {
+          dates.push(new Date(currentDate));
+        }
+      }
+      currentDate = addDays(currentDate, 1);
+    } else if (chamber.scheduleType === "MONTHLY_SPECIFIC") {
+      // Check if current day matches weekDay and weekNumber
+      const currentDayName = Object.keys(weekDays).find(
+        (key) => weekDays[key as keyof typeof weekDays] === currentDate.getDay()
+      );
+
+      if (currentDayName && chamber.weekDays.includes(currentDayName)) {
+        const weekNumber = getWeekNumberOfMonth(currentDate);
+        if (chamber.weekNumbers.includes(weekNumber)) {
+          // Check if it's not past the chamber time for today
+          if (
+            !isSameDay(currentDate, new Date()) ||
+            !isTimePassed(chamber, currentDate)
+          ) {
+            dates.push(new Date(currentDate));
+          }
+        }
+      }
+      currentDate = addDays(currentDate, 1);
+    } else {
+      // For other schedule types, just move to next day
       currentDate = addDays(currentDate, 1);
     }
-
-    // Check if it matches the week number
-    if (getWeekNumberOfMonth(currentDate) === chamber.weekNumber) {
-      // Check if it's not past the chamber time for today
-      if (
-        !isSameDay(currentDate, new Date()) ||
-        !isTimePassed(chamber, currentDate)
-      ) {
-        dates.push(new Date(currentDate));
-      }
-    }
-
-    currentDate = addDays(currentDate, 7);
   }
 
   return dates;
@@ -238,13 +266,34 @@ export function AppointmentDrawer({
               <div>
                 <h4 className="font-medium">Schedule</h4>
                 <p className="text-sm text-muted-foreground mb-2">
-                  {chamber.weekNumber.charAt(0) +
-                    chamber.weekNumber.slice(1).toLowerCase()}{" "}
-                  {chamber.weekDay.charAt(0) +
-                    chamber.weekDay.slice(1).toLowerCase()}{" "}
-                  of every month
+                  {chamber.scheduleType === "WEEKLY_RECURRING" &&
+                  chamber.weekDays.length === 1
+                    ? `Every ${
+                        chamber.weekDays[0].charAt(0) +
+                        chamber.weekDays[0].slice(1).toLowerCase()
+                      }`
+                    : chamber.scheduleType === "MULTI_WEEKLY"
+                    ? `${chamber.weekDays
+                        .map(
+                          (day) => day.charAt(0) + day.slice(1).toLowerCase()
+                        )
+                        .join(" & ")} weekly`
+                    : chamber.scheduleType === "MONTHLY_SPECIFIC"
+                    ? `${chamber.weekNumbers
+                        .map(
+                          (num) => num.charAt(0) + num.slice(1).toLowerCase()
+                        )
+                        .join(" & ")} ${chamber.weekDays
+                        .map(
+                          (day) => day.charAt(0) + day.slice(1).toLowerCase()
+                        )
+                        .join(" & ")} of every month`
+                    : "Custom Schedule"}
                   <br />
                   Time: {chamber.startTime} - {chamber.endTime}
+                  <br />
+                  {chamber.slotDuration} min slots • Max {chamber.maxSlots}{" "}
+                  patients
                 </p>
                 <ScrollArea className="w-full  rounded-md border">
                   <div className="flex w-max space-x-4 p-4">

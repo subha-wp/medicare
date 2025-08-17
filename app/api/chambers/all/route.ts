@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       const result = await prisma.$queryRaw`
     WITH ChambersWithDistance AS (
       SELECT 
-        c.id, c."weekNumber", c."weekDay", c."startTime", c."endTime", c.fees, c."maxSlots", c."isVerified", c."verificationDate",
+        c.id, c."weekNumbers", c."weekDays", c."scheduleType", c."startTime", c."endTime", c.fees, c."maxSlots", c."slotDuration", c."isVerified", c."verificationDate",
         d.id as "doctorId", d.name as "doctorName", d.specialization, d.qualification, d."avatarUrl",
         p.name as "pharmacyName", p.address, p."businessName", p.location,
         ${Prisma.sql`
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         p.address ILIKE ${`%${query}%`})
     )
     SELECT 
-      id, "weekNumber", "weekDay", "startTime", "endTime", fees, "maxSlots", "isVerified", "verificationDate",
+      id, "weekNumbers", "weekDays", "scheduleType", "startTime", "endTime", fees, "maxSlots", "slotDuration", "isVerified", "verificationDate",
       json_build_object(
         'id', "doctorId",
         'name', "doctorName",

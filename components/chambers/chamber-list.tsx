@@ -15,12 +15,14 @@ import MapButton from "../MapButton";
 
 type Chamber = {
   id: string;
-  weekNumber: string;
-  weekDay: string;
+  weekNumbers: string[];
+  weekDays: string[];
+  scheduleType: string;
   startTime: string;
   endTime: string;
   fees: number;
   maxSlots: number;
+  slotDuration: number;
   doctor: {
     id: string;
     name: string;
@@ -198,10 +200,29 @@ export function ChamberList() {
                 <div className="space-y-1 mt-2">
                   <p className="text-sm font-medium">Schedule:</p>
                   <p className="text-sm">
-                    {chamber.weekNumber.charAt(0).toUpperCase() +
-                      chamber.weekNumber.slice(1).toLowerCase()}{" "}
-                    {chamber.weekDay.charAt(0).toUpperCase() +
-                      chamber.weekDay.slice(1).toLowerCase()}
+                    {chamber.scheduleType === "WEEKLY_RECURRING" &&
+                    chamber.weekDays.length === 1
+                      ? `Every ${
+                          chamber.weekDays[0].charAt(0) +
+                          chamber.weekDays[0].slice(1).toLowerCase()
+                        }`
+                      : chamber.scheduleType === "MULTI_WEEKLY"
+                      ? `${chamber.weekDays
+                          .map(
+                            (day) => day.charAt(0) + day.slice(1).toLowerCase()
+                          )
+                          .join(" & ")}`
+                      : chamber.scheduleType === "MONTHLY_SPECIFIC"
+                      ? `${chamber.weekNumbers
+                          .map(
+                            (num) => num.charAt(0) + num.slice(1).toLowerCase()
+                          )
+                          .join(" & ")} ${chamber.weekDays
+                          .map(
+                            (day) => day.charAt(0) + day.slice(1).toLowerCase()
+                          )
+                          .join(" & ")}`
+                      : "Custom Schedule"}
                   </p>
                   <p className="text-sm">
                     {formatTime(chamber?.startTime)} -{" "}
@@ -245,13 +266,6 @@ export function ChamberList() {
                   Book Appointment
                 </Button>
               )}
-              {/* {userRole === "PATIENT" && !chamber.isVerified && (
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-sm text-yellow-800">
-                    Online Booking is not available.
-                  </p>
-                </div>
-              )} */}
             </CardContent>
             <div className="absolute top-1 right-1">
               <MapButton
