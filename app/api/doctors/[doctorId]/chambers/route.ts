@@ -28,10 +28,10 @@ export async function GET(
       },
       orderBy: [
         {
-          weekNumber: "asc",
+          weekNumbers: "asc",
         },
         {
-          weekDay: "asc",
+          weekDays: "asc",
         },
       ],
     });
