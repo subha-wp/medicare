@@ -24,10 +24,22 @@ model User {
   patient  Patient?
   doctor   Doctor?
   pharmacy Pharmacy?
+  admin    Admin?
 
   // Auth related fields
   sessions      Session[]
   notifications Notification[]
+}
+
+model Admin {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  name        String
+  phone       String?
+  department  String?
+  permissions Json? // Store specific permissions as JSON
+  lastLogin   DateTime?
+  user        User      @relation(fields: [userId], references: [id])
 }
 
 // Add Notification model
@@ -66,6 +78,8 @@ enum UserRole {
   PATIENT
   DOCTOR
   PHARMACY
+  ADMIN
+  OFFICE_MANAGER
 }
 
 model Patient {
@@ -83,29 +97,33 @@ model Patient {
 }
 
 model Doctor {
-  id             String  @id @default(cuid())
-  userId         String  @unique
-  name           String
-  phone          String
-  specialization String
-  qualification  String
-  address        String
-  experience     Int
-  about          String?
-  licenseNo      String  @unique
-  aadhaarNo      String  @unique
-  documents      Json // Stores document URLs for license and aadhaar
-  user           User    @relation(fields: [userId], references: [id])
-  avatarUrl      String?
-
-  chambers       Chamber[]
-  appointments   Appointment[]
-  medicalRecords MedicalRecord[]
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  name              String
+  phone             String
+  specialization    String
+  qualification     String
+  address           String
+  experience        Int
+  about             String?
+  licenseNo         String          @unique
+  aadhaarNo         String          @unique
+  documents         Json // Stores document URLs for license and aadhaar
+  user              User            @relation(fields: [userId], references: [id])
+  consultationFee   Float?
+  isVerified        Boolean         @default(false)
+  verificationDate  DateTime?
+  verificationNotes String?
+  avatarUrl         String?
+  createdAt         DateTime        @default(now())
+  chambers          Chamber[]
+  appointments      Appointment[]
+  medicalRecords    MedicalRecord[]
 }
 
 model Pharmacy {
-  id           String  @id @default(cuid())
-  userId       String  @unique
+  id           String   @id @default(cuid())
+  userId       String   @unique
   name         String
   businessName String
   phone        String
@@ -114,34 +132,45 @@ model Pharmacy {
   gstin        String?
   tradeLicense String?
   documents    Json? // Stores document URLs
-  user         User    @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
   avatarUrl    String?
+  createdAt    DateTime @default(now())
 
   chambers     Chamber[]
   appointments Appointment[]
 }
 
 model Chamber {
-  id                String     @id @default(cuid())
+  id                String       @id @default(cuid())
   doctorId          String
   pharmacyId        String
-  weekNumber        WeekNumber
-  weekDay           WeekDay
+  scheduleType      ScheduleType
+  weekDays          WeekDay[] // Changed to array for multiple days
+  weekNumbers       WeekNumber[] // For multiple week numbers like [SECOND, FOURTH]
+  isRecurring       Boolean      @default(true) // Weekly recurring vs specific weeks
   startTime         String // Format: "HH:mm"
   endTime           String // Format: "HH:mm"
   fees              Float
-  isActive          Boolean    @default(true)
+  isActive          Boolean      @default(true)
   slotDuration      Int // Duration of each slot in minutes
   maxSlots          Int // Maximum number of slots per chamber session
-  isVerified        Boolean    @default(false)
+  isVerified        Boolean      @default(false)
   verificationDate  DateTime?
   verificationNotes String?
+  createdAt         DateTime     @default(now())
 
   doctor       Doctor        @relation(fields: [doctorId], references: [id])
   pharmacy     Pharmacy      @relation(fields: [pharmacyId], references: [id])
   appointments Appointment[]
 
   @@index([isVerified])
+}
+
+enum ScheduleType {
+  WEEKLY_RECURRING // Every Monday, Every Sunday, etc.
+  MULTI_WEEKLY // Multiple days per week like Sunday & Friday
+  MONTHLY_SPECIFIC // 2nd and 4th Sunday, 1st and 3rd Friday, etc.
+  CUSTOM_DATES // Specific dates (future enhancement)
 }
 
 model Appointment {
