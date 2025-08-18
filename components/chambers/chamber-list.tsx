@@ -1,4 +1,4 @@
-//@ts-nocheck
+// @ts-nocheck
 "use client";
 
 import { useEffect, useState } from "react";
@@ -58,17 +58,17 @@ export function ChamberList() {
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [loading, setLoading] = useState(false); // Added state for loading
+  const [loadingMore, setLoadingMore] = useState(false);
   const { userLocation, error: locationError } = useUserLocation();
   const [selectedChamber, setSelectedChamber] = useState<Chamber | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [userRole, setUserRole] = useState<string>("PATIENT");
 
   const loadMore = async () => {
-    if (!hasMore || loading) return;
+    if (!hasMore || loadingMore) return;
 
     try {
-      setLoading(true);
+      setLoadingMore(true);
       const params = new URLSearchParams();
       if (query) params.set("q", query);
       params.set("page", (currentPage + 1).toString());
@@ -77,11 +77,16 @@ export function ChamberList() {
         params.set("lon", userLocation.lon.toString());
       }
 
-      const response = await fetch(`/api/chambers/search?${params.toString()}`);
+      const response = await fetch(`/api/chambers/all?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.error) {
-        console.error(data.error);
+        console.error("API Error:", data.error);
         return;
       }
 
@@ -91,7 +96,7 @@ export function ChamberList() {
     } catch (error) {
       console.error("Error loading more chambers:", error);
     } finally {
-      setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -104,6 +109,10 @@ export function ChamberList() {
     const fetchInitialChambers = async () => {
       try {
         setInitialLoading(true);
+        setChambers([]);
+        setCurrentPage(1);
+        setHasMore(true);
+
         const params = new URLSearchParams();
         if (query) params.set("q", query);
         params.set("page", "1");
@@ -112,21 +121,28 @@ export function ChamberList() {
           params.set("lon", userLocation.lon.toString());
         }
 
-        // Use the all chambers endpoint to show both verified and unverified
         const response = await fetch(`/api/chambers/all?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.error) {
-          console.error(data.error);
+          console.error("API Error:", data.error);
+          setChambers([]);
+          setHasMore(false);
           return;
         }
 
-        setChambers(data.chambers);
-        setHasMore(data.hasMore);
-        setCurrentPage(1);
-        setUserRole(data.userRole);
+        setChambers(data.chambers || []);
+        setHasMore(data.hasMore || false);
+        setUserRole(data.userRole || "PATIENT");
       } catch (error) {
         console.error("Error fetching chambers:", error);
+        setChambers([]);
+        setHasMore(false);
       } finally {
         setInitialLoading(false);
       }
@@ -148,7 +164,16 @@ export function ChamberList() {
     return `${formattedHours}:${minutes} ${ampm}`;
   }
 
-  if (chambers.length === 0 && !initialLoading) {
+  if (initialLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600 mb-4" />
+        <p className="text-sm text-gray-500">Finding chambers near you...</p>
+      </div>
+    );
+  }
+
+  if (chambers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4">
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -158,17 +183,10 @@ export function ChamberList() {
           No chambers found
         </h3>
         <p className="text-sm text-gray-500 text-center">
-          Try adjusting your search or location settings
+          {userLocation
+            ? "Try adjusting your search or expanding your location radius"
+            : "Enable location access for better results or try different search terms"}
         </p>
-      </div>
-    );
-  }
-
-  if (initialLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600 mb-4" />
-        <p className="text-sm text-gray-500">Finding chambers near you...</p>
       </div>
     );
   }
@@ -180,11 +198,10 @@ export function ChamberList() {
           <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-amber-800">
-              Location access needed
+              Location access needed for better results
             </p>
             <p className="text-xs text-amber-700 mt-1">
-              {locationError}. Chambers will be shown without distance
-              information.
+              {locationError}. Showing chambers without distance sorting.
             </p>
           </div>
         </div>
@@ -356,7 +373,7 @@ export function ChamberList() {
 
       {/* Loading indicator and intersection observer target */}
       <div ref={loadMoreRef} className="h-1" />
-      {loading && (
+      {loadingMore && (
         <div className="flex justify-center py-6">
           <div className="flex items-center space-x-2">
             <Loader2 className="h-5 w-5 animate-spin text-green-600" />

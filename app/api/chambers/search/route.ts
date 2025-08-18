@@ -1,10 +1,10 @@
-//@ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
+const MAX_DISTANCE_KM = 50; // Limit search radius to 50km for performance
 
 export async function GET(request: NextRequest) {
   const { user } = await validateRequest();
@@ -28,88 +28,166 @@ export async function GET(request: NextRequest) {
     let total;
 
     if (lat && lon) {
-      // Using raw query with proper distance calculation
-      const result = await prisma.$queryRaw`
-    WITH ChambersWithDistance AS (
-      SELECT 
-        c.id, c."weekNumber", c."weekDay", c."startTime", c."endTime", c.fees, c."maxSlots",
-        d.id as "doctorId", d.name as "doctorName", d.specialization, d.qualification, d."avatarUrl",
-        p.name as "pharmacyName", p.address, p."businessName", p.location,
-        ${Prisma.sql`
-          6371 * acos(
-            cos(radians(${lat})) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
-            cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon})) +
-            sin(radians(${lat})) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
+      // Optimized query with distance filtering for better performance
+      const result = await prisma.$queryRaw<any[]>`
+        WITH ChambersWithDistance AS (
+          SELECT 
+            c.id, 
+            c."weekNumbers", 
+            c."weekDays", 
+            c."scheduleType", 
+            c."startTime", 
+            c."endTime", 
+            c.fees, 
+            c."maxSlots", 
+            c."slotDuration", 
+            c."isVerified", 
+            c."verificationDate",
+            d.id as "doctorId", 
+            d.name as "doctorName", 
+            d.specialization, 
+            d.qualification, 
+            d."avatarUrl",
+            p.name as "pharmacyName", 
+            p.address, 
+            p."businessName", 
+            p.location,
+            (
+              6371 * acos(
+                LEAST(1.0, 
+                  cos(radians(${lat})) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
+                  cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon})) +
+                  sin(radians(${lat})) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
+                )
+              )
+            ) as distance
+          FROM "Chamber" c
+          JOIN "Doctor" d ON c."doctorId" = d.id
+          JOIN "Pharmacy" p ON c."pharmacyId" = p.id
+          WHERE 
+            c."isActive" = true AND
+            p.location IS NOT NULL AND
+            p.location->>'latitude' IS NOT NULL AND
+            p.location->>'longitude' IS NOT NULL AND
+            (
+              CASE 
+                WHEN ${query} = '' THEN true
+                ELSE (
+                  d.name ILIKE ${"%" + query + "%"} OR
+                  d.specialization ILIKE ${"%" + query + "%"} OR
+                  p.name ILIKE ${"%" + query + "%"} OR
+                  p.address ILIKE ${"%" + query + "%"}
+                )
+              END
+            )
+        ),
+        FilteredChambers AS (
+          SELECT *
+          FROM ChambersWithDistance
+          WHERE distance <= ${MAX_DISTANCE_KM}
+          ORDER BY "isVerified" DESC, distance ASC
+        )
+        SELECT 
+          id, 
+          "weekNumbers", 
+          "weekDays", 
+          "scheduleType", 
+          "startTime", 
+          "endTime", 
+          fees, 
+          "maxSlots", 
+          "slotDuration", 
+          "isVerified", 
+          "verificationDate",
+          json_build_object(
+            'id', "doctorId",
+            'name', "doctorName",
+            'specialization', specialization,
+            'qualification', qualification,
+            'avatarUrl', "avatarUrl"
+          ) as doctor,
+          json_build_object(
+            'name', "pharmacyName",
+            'address', address,
+            'businessName', "businessName",
+            'location', location
+          ) as pharmacy,
+          distance
+        FROM FilteredChambers
+        LIMIT ${ITEMS_PER_PAGE}
+        OFFSET ${skip};
+      `;
+
+      const countResult = await prisma.$queryRaw<[{ total: bigint }]>`
+        SELECT COUNT(*) as total
+        FROM "Chamber" c
+        JOIN "Doctor" d ON c."doctorId" = d.id
+        JOIN "Pharmacy" p ON c."pharmacyId" = p.id
+        WHERE 
+          c."isActive" = true AND
+          p.location IS NOT NULL AND
+          p.location->>'latitude' IS NOT NULL AND
+          p.location->>'longitude' IS NOT NULL AND
+          (
+            6371 * acos(
+              LEAST(1.0,
+                cos(radians(${lat})) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
+                cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon})) +
+                sin(radians(${lat})) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
+              )
+            )
+          ) <= ${MAX_DISTANCE_KM} AND
+          (
+            CASE 
+              WHEN ${query} = '' THEN true
+              ELSE (
+                d.name ILIKE ${"%" + query + "%"} OR
+                d.specialization ILIKE ${"%" + query + "%"} OR
+                p.name ILIKE ${"%" + query + "%"} OR
+                p.address ILIKE ${"%" + query + "%"}
+              )
+            END
           )
-        `} as distance
-      FROM "Chamber" c
-      JOIN "Doctor" d ON c."doctorId" = d.id
-      JOIN "Pharmacy" p ON c."pharmacyId" = p.id
-      WHERE 
-        c."isActive" = true AND
-        c."isVerified" = true AND
-        (d.name ILIKE ${`%${query}%`} OR
-        d.specialization ILIKE ${`%${query}%`} OR
-        p.name ILIKE ${`%${query}%`} OR
-        p.address ILIKE ${`%${query}%`})
-    )
-    SELECT 
-      id, "weekNumber", "weekDay", "startTime", "endTime", fees, "maxSlots",
-      json_build_object(
-        'id', "doctorId",
-        'name', "doctorName",
-        'specialization', specialization,
-        'qualification', qualification,
-        'avatarUrl', "avatarUrl"
-      ) as doctor,
-      json_build_object(
-        'name', "pharmacyName",
-        'address', address,
-        'businessName', "businessName",
-        'location', location
-      ) as pharmacy,
-      distance
-    FROM ChambersWithDistance
-    ORDER BY distance ASC
-    LIMIT ${ITEMS_PER_PAGE}
-    OFFSET ${skip};
-  `;
+      `;
 
-      const countResult = await prisma.$queryRaw`
-    SELECT COUNT(*) as total
-    FROM "Chamber" c
-    JOIN "Doctor" d ON c."doctorId" = d.id
-    JOIN "Pharmacy" p ON c."pharmacyId" = p.id
-    WHERE 
-      c."isActive" = true AND
-      c."isVerified" = true AND
-      (d.name ILIKE ${`%${query}%`} OR
-      d.specialization ILIKE ${`%${query}%`} OR
-      p.name ILIKE ${`%${query}%`} OR
-      p.address ILIKE ${`%${query}%`})
-  `;
-
-      chambers = result;
-      total = parseInt(countResult[0].total);
+      chambers = result || [];
+      total = Number(countResult[0]?.total || 0);
     } else {
-      [chambers, total] = await Promise.all([
-        prisma.chamber.findMany({
-          where: {
-            isActive: true,
-            isVerified: true,
-            OR: [
-              { doctor: { name: { contains: query, mode: "insensitive" } } },
-              {
-                doctor: {
-                  specialization: { contains: query, mode: "insensitive" },
+      // Fallback query without location
+      const whereClause = {
+        isActive: true,
+        ...(query && {
+          OR: [
+            {
+              doctor: {
+                name: { contains: query, mode: "insensitive" as const },
+              },
+            },
+            {
+              doctor: {
+                specialization: {
+                  contains: query,
+                  mode: "insensitive" as const,
                 },
               },
-              { pharmacy: { name: { contains: query, mode: "insensitive" } } },
-              {
-                pharmacy: { address: { contains: query, mode: "insensitive" } },
+            },
+            {
+              pharmacy: {
+                name: { contains: query, mode: "insensitive" as const },
               },
-            ],
-          },
+            },
+            {
+              pharmacy: {
+                address: { contains: query, mode: "insensitive" as const },
+              },
+            },
+          ],
+        }),
+      };
+
+      [chambers, total] = await Promise.all([
+        prisma.chamber.findMany({
+          where: whereClause,
           include: {
             doctor: {
               select: {
@@ -131,29 +209,10 @@ export async function GET(request: NextRequest) {
           },
           take: ITEMS_PER_PAGE,
           skip,
-          orderBy: {
-            doctor: {
-              name: "asc",
-            },
-          },
+          orderBy: [{ isVerified: "desc" }, { doctor: { name: "asc" } }],
         }),
         prisma.chamber.count({
-          where: {
-            isActive: true,
-            isVerified: true,
-            OR: [
-              { doctor: { name: { contains: query, mode: "insensitive" } } },
-              {
-                doctor: {
-                  specialization: { contains: query, mode: "insensitive" },
-                },
-              },
-              { pharmacy: { name: { contains: query, mode: "insensitive" } } },
-              {
-                pharmacy: { address: { contains: query, mode: "insensitive" } },
-              },
-            ],
-          },
+          where: whereClause,
         }),
       ]);
     }
@@ -165,7 +224,7 @@ export async function GET(request: NextRequest) {
       chambers: chambers.map((chamber) => ({
         ...chamber,
         distance: chamber.distance
-          ? parseFloat(chamber.distance.toFixed(2))
+          ? parseFloat(Number(chamber.distance).toFixed(2))
           : null,
       })),
       hasMore,
