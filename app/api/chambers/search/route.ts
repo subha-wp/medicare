@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || "";
+    const doctorId = searchParams.get("doctorId");
     const page = parseInt(searchParams.get("page") || "1");
     const skip = (page - 1) * ITEMS_PER_PAGE;
     const lat = searchParams.get("lat")
@@ -48,6 +49,7 @@ export async function GET(request: NextRequest) {
             d.specialization, 
             d.qualification, 
             d."avatarUrl",
+            d."licenseNo",
             p.name as "pharmacyName", 
             p.address, 
             p."businessName", 
@@ -69,6 +71,12 @@ export async function GET(request: NextRequest) {
             p.location IS NOT NULL AND
             p.location->>'latitude' IS NOT NULL AND
             p.location->>'longitude' IS NOT NULL AND
+            (
+              CASE 
+                WHEN ${doctorId} IS NOT NULL THEN d.id = ${doctorId}
+                ELSE true
+              END
+            ) AND
             (
               CASE 
                 WHEN ${query} = '' THEN true
@@ -104,7 +112,8 @@ export async function GET(request: NextRequest) {
             'name', "doctorName",
             'specialization', specialization,
             'qualification', qualification,
-            'avatarUrl', "avatarUrl"
+            'avatarUrl', "avatarUrl",
+            'licenseNo', "licenseNo"
           ) as doctor,
           json_build_object(
             'name', "pharmacyName",
@@ -128,6 +137,12 @@ export async function GET(request: NextRequest) {
           p.location IS NOT NULL AND
           p.location->>'latitude' IS NOT NULL AND
           p.location->>'longitude' IS NOT NULL AND
+          (
+            CASE 
+              WHEN ${doctorId} IS NOT NULL THEN d.id = ${doctorId}
+              ELSE true
+            END
+          ) AND
           (
             6371 * acos(
               LEAST(1.0,
@@ -156,6 +171,9 @@ export async function GET(request: NextRequest) {
       // Fallback query without location
       const whereClause = {
         isActive: true,
+        ...(doctorId && {
+          doctorId: doctorId,
+        }),
         ...(query && {
           OR: [
             {
@@ -196,6 +214,7 @@ export async function GET(request: NextRequest) {
                 specialization: true,
                 qualification: true,
                 avatarUrl: true,
+                licenseNo: true,
               },
             },
             pharmacy: {

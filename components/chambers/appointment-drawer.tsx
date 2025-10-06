@@ -37,6 +37,7 @@ type Chamber = {
     avatarUrl: string | null | undefined;
     name: string;
     specialization: string;
+    licenseNo?: string | null;
   };
   pharmacy: {
     businessName: string;
@@ -250,6 +251,13 @@ export function AppointmentDrawer({
                     <small className="max-w-max border rounded-md p-[1px]">
                       {chamber.doctor.specialization}
                     </small>
+                    {chamber.doctor.licenseNo && (
+                      <div className="mt-1">
+                        <small className="text-xs text-blue-600 font-medium">
+                          License: {chamber.doctor.licenseNo}
+                        </small>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

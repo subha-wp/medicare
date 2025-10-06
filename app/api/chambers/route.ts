@@ -61,6 +61,7 @@ export async function GET(request: Request) {
           select: {
             name: true,
             specialization: true,
+            licenseNo: true,
           },
         },
       },
@@ -213,6 +214,7 @@ export async function POST(request: Request) {
           select: {
             name: true,
             specialization: true,
+            licenseNo: true,
           },
         },
       },

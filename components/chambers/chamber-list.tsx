@@ -15,6 +15,7 @@ import {
   Calendar,
   Shield,
   AlertTriangle,
+  FileText,
 } from "lucide-react";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -36,6 +37,7 @@ type Chamber = {
     specialization: string;
     qualification: string;
     avatarUrl?: string | null;
+    licenseNo?: string | null;
   };
   pharmacy: {
     name: string;
@@ -54,6 +56,8 @@ type Chamber = {
 export function ChamberList() {
   const searchParams = useSearchParams();
   const query = searchParams.get("query");
+  const doctorId = searchParams.get("doctorId");
+  const doctorName = searchParams.get("doctorName");
   const [chambers, setChambers] = useState<Chamber[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,6 +75,7 @@ export function ChamberList() {
       setLoadingMore(true);
       const params = new URLSearchParams();
       if (query) params.set("q", query);
+      if (doctorId) params.set("doctorId", doctorId);
       params.set("page", (currentPage + 1).toString());
       if (userLocation) {
         params.set("lat", userLocation.lat.toString());
@@ -115,6 +120,7 @@ export function ChamberList() {
 
         const params = new URLSearchParams();
         if (query) params.set("q", query);
+        if (doctorId) params.set("doctorId", doctorId);
         params.set("page", "1");
         if (userLocation) {
           params.set("lat", userLocation.lat.toString());
@@ -149,7 +155,7 @@ export function ChamberList() {
     };
 
     fetchInitialChambers();
-  }, [query, userLocation]);
+  }, [query, userLocation, doctorId]);
 
   const handleBookAppointment = (chamber: Chamber) => {
     setSelectedChamber(chamber);
@@ -207,6 +213,22 @@ export function ChamberList() {
         </div>
       )}
 
+      {doctorId && doctorName && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start space-x-3">
+          <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+            <span className="text-blue-600 text-xs font-bold">Dr</span>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-blue-800">
+              Showing chambers for Dr. {doctorName}
+            </p>
+            <p className="text-xs text-blue-700 mt-1">
+              {chambers.length} chamber{chambers.length !== 1 ? 's' : ''} found
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         {chambers.map((chamber) => (
           <Card
@@ -242,6 +264,14 @@ export function ChamberList() {
                     >
                       {chamber.doctor?.specialization}
                     </Badge>
+                    {chamber.doctor?.licenseNo && (
+                      <div className="flex items-center gap-1 mt-2">
+                        <FileText className="w-3 h-3 text-blue-600" />
+                        <span className="text-xs text-blue-700 font-medium">
+                          License: {chamber.doctor.licenseNo}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col items-end space-y-2">

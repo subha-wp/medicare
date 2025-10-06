@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
           experience: true,
           about: true,
           avatarUrl: true,
+          licenseNo: true,
         },
         take: ITEMS_PER_PAGE,
         skip,
