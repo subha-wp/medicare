@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, UserIcon } from "lucide-react";
 import Image from "next/image";
 import { CldUploadWidget } from "next-cloudinary";
 
@@ -133,106 +133,133 @@ export function ProfileForm({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <FormItem>
-                <FormLabel>Profile Picture</FormLabel>
-                <div className="flex items-center space-x-4">
-                  {avatarUrl && (
-                    <Image
-                      src={avatarUrl}
-                      alt="Profile"
-                      width={100}
-                      height={100}
-                      className="rounded-full"
-                    />
-                  )}
-                  <CldUploadWidget
-                    uploadPreset={
-                      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
-                    }
-                    onSuccess={(result: any) => {
-                      setAvatarUrl(result.info.secure_url);
-                    }}
+    <div className="space-y-6">
+      {/* Native-style avatar section */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="text-center">
+          <div className="relative inline-block">
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt="Profile"
+                width={120}
+                height={120}
+                className="rounded-full border-4 border-white shadow-lg"
+              />
+            ) : (
+              <div className="w-30 h-30 bg-gray-200 rounded-full flex items-center justify-center">
+                <UserIcon className="w-16 h-16 text-gray-400" />
+              </div>
+            )}
+          </div>
+          <div className="mt-4">
+            <CldUploadWidget
+              uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+              onSuccess={(result: any) => {
+                setAvatarUrl(result.info.secure_url);
+              }}
+            >
+              {({ open }) => {
+                return (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => open()}
+                    className="w-full max-w-xs"
                   >
-                    {({ open }) => {
-                      return (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => open()}
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          {avatarUrl ? "Change Avatar" : "Upload Avatar"}
-                        </Button>
-                      );
-                    }}
-                  </CldUploadWidget>
-                </div>
-                <FormDescription>
-                  Upload a profile picture (recommended size: 200x200px)
-                </FormDescription>
-              </FormItem>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {avatarUrl ? "Change Photo" : "Add Photo"}
+                  </Button>
+                );
+              }}
+            </CldUploadWidget>
+            <p className="text-xs text-gray-500 mt-2">
+              Recommended: 200x200px
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Native-style form */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+              
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700">Full Name</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Enter your full name" 
+                        className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700">Phone Number</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Enter your phone number" 
+                        className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700">Address</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Enter your address" 
+                        className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter your name" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter your phone number" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter your address" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             {userRole === "PATIENT" && (
-              <>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Medical Information</h3>
+                
                 <FormField
                   control={form.control}
                   name="dateOfBirth"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date of Birth</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Date of Birth</FormLabel>
                       <FormControl>
-                        <Input {...field} type="date" />
+                        <Input 
+                          {...field} 
+                          type="date" 
+                          className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -244,32 +271,36 @@ export function ProfileForm({
                   name="bloodGroup"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Blood Group</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Blood Group</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter your blood group"
+                          placeholder="e.g., A+, B-, O+"
+                          className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </>
+              </div>
             )}
 
             {userRole === "DOCTOR" && (
-              <>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Professional Information</h3>
+                
                 <FormField
                   control={form.control}
                   name="specialization"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Specialization</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Specialization</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter your specialization"
+                          placeholder="e.g., Cardiology, Neurology"
+                          className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </FormControl>
                       <FormMessage />
@@ -282,11 +313,12 @@ export function ProfileForm({
                   name="qualification"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Qualification</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Qualification</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter your qualification"
+                          placeholder="e.g., MBBS, MD, PhD"
+                          className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </FormControl>
                       <FormMessage />
@@ -299,9 +331,15 @@ export function ProfileForm({
                   name="experience"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Years of Experience</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Years of Experience</FormLabel>
                       <FormControl>
-                        <Input {...field} type="number" min="0" />
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          min="0" 
+                          placeholder="0"
+                          className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -313,32 +351,36 @@ export function ProfileForm({
                   name="about"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>About</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">About</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          placeholder="Tell us about yourself"
+                          placeholder="Tell patients about your experience and approach..."
+                          className="min-h-[100px] text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </>
+              </div>
             )}
 
             {userRole === "PHARMACY" && (
-              <>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Information</h3>
+                
                 <FormField
                   control={form.control}
                   name="businessName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business Name</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Business Name</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Enter your business name"
+                          placeholder="Enter your pharmacy name"
+                          className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </FormControl>
                       <FormMessage />
@@ -351,24 +393,35 @@ export function ProfileForm({
                   name="gstin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>GSTIN (Optional)</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">GSTIN (Optional)</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter your GSTIN" />
+                        <Input 
+                          {...field} 
+                          placeholder="Enter your GSTIN number" 
+                          className="h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </>
+              </div>
             )}
 
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? "Updating..." : "Update Profile"}
-            </Button>
+            {/* Submit Button */}
+            <div className="pt-6 border-t border-gray-200">
+              <Button 
+                type="submit" 
+                disabled={loading}
+                className="w-full h-12 text-base font-medium bg-primary hover:bg-blue-700 text-white rounded-xl"
+              >
+                {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                {loading ? "Updating Profile..." : "Update Profile"}
+              </Button>
+            </div>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

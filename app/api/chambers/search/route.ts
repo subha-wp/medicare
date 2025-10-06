@@ -57,9 +57,9 @@ export async function GET(request: NextRequest) {
             (
               6371 * acos(
                 LEAST(1.0, 
-                  cos(radians(${lat})) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
-                  cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon})) +
-                  sin(radians(${lat})) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
+                  cos(radians(${lat}::float)) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
+                  cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon}::float)) +
+                  sin(radians(${lat}::float)) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
                 )
               )
             ) as distance
@@ -73,18 +73,18 @@ export async function GET(request: NextRequest) {
             p.location->>'longitude' IS NOT NULL AND
             (
               CASE 
-                WHEN ${doctorId} IS NOT NULL THEN d.id = ${doctorId}
+                WHEN ${doctorId}::text IS NOT NULL THEN d.id = ${doctorId}::text
                 ELSE true
               END
             ) AND
             (
               CASE 
-                WHEN ${query} = '' THEN true
+                WHEN ${query}::text = '' THEN true
                 ELSE (
-                  d.name ILIKE ${"%" + query + "%"} OR
-                  d.specialization ILIKE ${"%" + query + "%"} OR
-                  p.name ILIKE ${"%" + query + "%"} OR
-                  p.address ILIKE ${"%" + query + "%"}
+                  d.name ILIKE ${"%" + query + "%"}::text OR
+                  d.specialization ILIKE ${"%" + query + "%"}::text OR
+                  p.name ILIKE ${"%" + query + "%"}::text OR
+                  p.address ILIKE ${"%" + query + "%"}::text
                 )
               END
             )
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         FilteredChambers AS (
           SELECT *
           FROM ChambersWithDistance
-          WHERE distance <= ${MAX_DISTANCE_KM}
+          WHERE distance <= ${MAX_DISTANCE_KM}::float
           ORDER BY "isVerified" DESC, distance ASC
         )
         SELECT 
@@ -123,8 +123,8 @@ export async function GET(request: NextRequest) {
           ) as pharmacy,
           distance
         FROM FilteredChambers
-        LIMIT ${ITEMS_PER_PAGE}
-        OFFSET ${skip};
+        LIMIT ${ITEMS_PER_PAGE}::int
+        OFFSET ${skip}::int;
       `;
 
       const countResult = await prisma.$queryRaw<[{ total: bigint }]>`
@@ -139,27 +139,27 @@ export async function GET(request: NextRequest) {
           p.location->>'longitude' IS NOT NULL AND
           (
             CASE 
-              WHEN ${doctorId} IS NOT NULL THEN d.id = ${doctorId}
+              WHEN ${doctorId}::text IS NOT NULL THEN d.id = ${doctorId}::text
               ELSE true
             END
           ) AND
           (
             6371 * acos(
               LEAST(1.0,
-                cos(radians(${lat})) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
-                cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon})) +
-                sin(radians(${lat})) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
+                cos(radians(${lat}::float)) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
+                cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon}::float)) +
+                sin(radians(${lat}::float)) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
               )
             )
-          ) <= ${MAX_DISTANCE_KM} AND
+          ) <= ${MAX_DISTANCE_KM}::float AND
           (
             CASE 
-              WHEN ${query} = '' THEN true
+              WHEN ${query}::text = '' THEN true
               ELSE (
-                d.name ILIKE ${"%" + query + "%"} OR
-                d.specialization ILIKE ${"%" + query + "%"} OR
-                p.name ILIKE ${"%" + query + "%"} OR
-                p.address ILIKE ${"%" + query + "%"}
+                d.name ILIKE ${"%" + query + "%"}::text OR
+                d.specialization ILIKE ${"%" + query + "%"}::text OR
+                p.name ILIKE ${"%" + query + "%"}::text OR
+                p.address ILIKE ${"%" + query + "%"}::text
               )
             END
           )

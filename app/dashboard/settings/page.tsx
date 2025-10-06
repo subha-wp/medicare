@@ -44,31 +44,48 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-4 mb-12">
-      <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+    <div className="min-h-screen bg-gray-50">
 
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          {(user.role === "DOCTOR" || user.role === "PHARMACY") && (
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          )}
-        </TabsList>
 
-        <TabsContent value="profile">
-          <ProfileForm
-            userRole={user.role}
-            initialData={profileData}
-            iniavatarUrl={user.avatarUrl}
-          />
-        </TabsContent>
+      {/* Native-style tab navigation */}
+      <div className="bg-white border-b border-gray-200">
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="w-full h-12 bg-transparent p-0 rounded-none">
+            <TabsTrigger 
+              value="profile" 
+              className="flex-1 h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent "
+            >
+              Profile
+            </TabsTrigger>
+            {(user.role === "DOCTOR" || user.role === "PHARMACY") && (
+              <TabsTrigger 
+                value="documents"
+                className="flex-1 h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent data-[state=active]:text-blue-600"
+              >
+                Documents
+              </TabsTrigger>
+            )}
+          </TabsList>
 
-        {(user.role === "DOCTOR" || user.role === "PHARMACY") && (
-          <TabsContent value="documents">
-            <DocumentsView documents={profileData.documents} />
+          <TabsContent value="profile" className="mt-0">
+            <div className="px-4 py-6">
+              <ProfileForm
+                userRole={user.role}
+                initialData={profileData}
+                iniavatarUrl={user.avatarUrl}
+              />
+            </div>
           </TabsContent>
-        )}
-      </Tabs>
+
+          {(user.role === "DOCTOR" || user.role === "PHARMACY") && (
+            <TabsContent value="documents" className="mt-0">
+              <div className="px-4 py-6">
+                <DocumentsView documents={profileData.documents} />
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
+      </div>
     </div>
   );
 }

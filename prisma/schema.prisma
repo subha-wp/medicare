@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -12,23 +9,23 @@ datasource db {
 }
 
 model User {
-  id             String   @id @unique
-  email          String   @unique
+  id             String         @id @unique
+  email          String?        @unique
+  phone          String?        @unique
   hashedPassword String
-  avatarUrl      String?
   role           UserRole
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  avatarUrl      String?
+  admin          Admin?
+  doctor         Doctor?
+  notifications  Notification[]
+  patient        Patient?
+  pharmacy       Pharmacy?
+  sessions       Session[]
 
-  // Profile relations based on role
-  patient  Patient?
-  doctor   Doctor?
-  pharmacy Pharmacy?
-  admin    Admin?
-
-  // Auth related fields
-  sessions      Session[]
-  notifications Notification[]
+  @@index([email])
+  @@index([phone])
 }
 
 model Admin {
@@ -37,12 +34,11 @@ model Admin {
   name        String
   phone       String?
   department  String?
-  permissions Json? // Store specific permissions as JSON
+  permissions Json?
   lastLogin   DateTime?
   user        User      @relation(fields: [userId], references: [id])
 }
 
-// Add Notification model
 model Notification {
   id        String           @id @default(cuid())
   userId    String
@@ -56,15 +52,6 @@ model Notification {
   @@index([userId])
 }
 
-enum NotificationType {
-  APPOINTMENT_BOOKED
-  APPOINTMENT_CANCELLED
-  APPOINTMENT_COMPLETED
-  MEDICAL_RECORD_ADDED
-  PAYMENT_RECEIVED
-  GENERAL
-}
-
 model Session {
   id        String   @id
   userId    String
@@ -72,6 +59,130 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Patient {
+  id             String          @id @default(cuid())
+  userId         String          @unique
+  name           String
+  phone          String?
+  address        String?
+  dateOfBirth    DateTime?
+  bloodGroup     String?
+  appointments   Appointment[]
+  medicalRecords MedicalRecord[]
+  user           User            @relation(fields: [userId], references: [id])
+}
+
+model Doctor {
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  name              String
+  phone             String?
+  specialization    String?
+  qualification     String?
+  experience        Int?
+  about             String?
+  licenseNo         String?         @unique
+  aadhaarNo         String?         @unique
+  documents         Json?
+  address           String?
+  avatarUrl         String?
+  createdAt         DateTime        @default(now())
+  consultationFee   Float?
+  isVerified        Boolean         @default(false)
+  verificationDate  DateTime?
+  verificationNotes String?
+  appointments      Appointment[]
+  chambers          Chamber[]
+  user              User            @relation(fields: [userId], references: [id])
+  medicalRecords    MedicalRecord[]
+}
+
+model Pharmacy {
+  id           String        @id @default(cuid())
+  userId       String        @unique
+  name         String
+  businessName String?
+  phone        String?
+  address      String?
+  location     Json?
+  gstin        String?
+  tradeLicense String?
+  documents    Json?
+  avatarUrl    String?
+  createdAt    DateTime      @default(now())
+  appointments Appointment[]
+  chambers     Chamber[]
+  user         User          @relation(fields: [userId], references: [id])
+}
+
+model Chamber {
+  id                String        @id @default(cuid())
+  doctorId          String
+  pharmacyId        String
+  startTime         String
+  endTime           String
+  fees              Float
+  isActive          Boolean       @default(true)
+  maxSlots          Int
+  slotDuration      Int
+  isVerified        Boolean       @default(false)
+  verificationDate  DateTime?
+  verificationNotes String?
+  createdAt         DateTime      @default(now())
+  isRecurring       Boolean       @default(true)
+  scheduleType      ScheduleType
+  weekNumbers       WeekNumber[]
+  weekDays          WeekDay[]
+  appointments      Appointment[]
+  doctor            Doctor        @relation(fields: [doctorId], references: [id])
+  pharmacy          Pharmacy      @relation(fields: [pharmacyId], references: [id])
+
+  @@index([isVerified])
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  patientId     String
+  doctorId      String
+  pharmacyId    String
+  chamberId     String
+  date          DateTime
+  status        AppointmentStatus @default(PENDING)
+  paymentStatus PaymentStatus     @default(PENDING)
+  paymentMethod PaymentMethod
+  amount        Float
+  createdAt     DateTime          @default(now())
+  slotNumber    Int
+  chamber       Chamber           @relation(fields: [chamberId], references: [id])
+  doctor        Doctor            @relation(fields: [doctorId], references: [id])
+  patient       Patient           @relation(fields: [patientId], references: [id])
+  pharmacy      Pharmacy          @relation(fields: [pharmacyId], references: [id])
+  medicalRecord MedicalRecord?
+}
+
+model MedicalRecord {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  patientId     String
+  doctorId      String
+  diagnosis     String
+  prescription  String
+  notes         String?
+  createdAt     DateTime    @default(now())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  doctor        Doctor      @relation(fields: [doctorId], references: [id])
+  patient       Patient     @relation(fields: [patientId], references: [id])
+}
+
+enum NotificationType {
+  APPOINTMENT_BOOKED
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_COMPLETED
+  MEDICAL_RECORD_ADDED
+  PAYMENT_RECEIVED
+  GENERAL
 }
 
 enum UserRole {
@@ -82,131 +193,11 @@ enum UserRole {
   OFFICE_MANAGER
 }
 
-model Patient {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  name        String
-  phone       String
-  address     String
-  dateOfBirth DateTime
-  bloodGroup  String?
-  user        User     @relation(fields: [userId], references: [id])
-
-  appointments   Appointment[]
-  medicalRecords MedicalRecord[]
-}
-
-model Doctor {
-  id                String          @id @default(cuid())
-  userId            String          @unique
-  name              String
-  phone             String
-  specialization    String
-  qualification     String
-  address           String
-  experience        Int
-  about             String?
-  licenseNo         String          @unique
-  aadhaarNo         String          @unique
-  documents         Json // Stores document URLs for license and aadhaar
-  user              User            @relation(fields: [userId], references: [id])
-  consultationFee   Float?
-  isVerified        Boolean         @default(false)
-  verificationDate  DateTime?
-  verificationNotes String?
-  avatarUrl         String?
-  createdAt         DateTime        @default(now())
-  chambers          Chamber[]
-  appointments      Appointment[]
-  medicalRecords    MedicalRecord[]
-}
-
-model Pharmacy {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  name         String
-  businessName String
-  phone        String
-  address      String
-  location     Json // Stores latitude and longitude
-  gstin        String?
-  tradeLicense String?
-  documents    Json? // Stores document URLs
-  user         User     @relation(fields: [userId], references: [id])
-  avatarUrl    String?
-  createdAt    DateTime @default(now())
-
-  chambers     Chamber[]
-  appointments Appointment[]
-}
-
-model Chamber {
-  id                String       @id @default(cuid())
-  doctorId          String
-  pharmacyId        String
-  scheduleType      ScheduleType
-  weekDays          WeekDay[] // Changed to array for multiple days
-  weekNumbers       WeekNumber[] // For multiple week numbers like [SECOND, FOURTH]
-  isRecurring       Boolean      @default(true) // Weekly recurring vs specific weeks
-  startTime         String // Format: "HH:mm"
-  endTime           String // Format: "HH:mm"
-  fees              Float
-  isActive          Boolean      @default(true)
-  slotDuration      Int // Duration of each slot in minutes
-  maxSlots          Int // Maximum number of slots per chamber session
-  isVerified        Boolean      @default(false)
-  verificationDate  DateTime?
-  verificationNotes String?
-  createdAt         DateTime     @default(now())
-
-  doctor       Doctor        @relation(fields: [doctorId], references: [id])
-  pharmacy     Pharmacy      @relation(fields: [pharmacyId], references: [id])
-  appointments Appointment[]
-
-  @@index([isVerified])
-}
-
 enum ScheduleType {
-  WEEKLY_RECURRING // Every Monday, Every Sunday, etc.
-  MULTI_WEEKLY // Multiple days per week like Sunday & Friday
-  MONTHLY_SPECIFIC // 2nd and 4th Sunday, 1st and 3rd Friday, etc.
-  CUSTOM_DATES // Specific dates (future enhancement)
-}
-
-model Appointment {
-  id            String            @id @default(cuid())
-  patientId     String
-  doctorId      String
-  pharmacyId    String
-  chamberId     String
-  date          DateTime
-  slotNumber    Int // New field to represent the slot number
-  status        AppointmentStatus @default(PENDING)
-  paymentStatus PaymentStatus     @default(PENDING)
-  paymentMethod PaymentMethod
-  amount        Float
-  createdAt     DateTime          @default(now())
-
-  patient       Patient        @relation(fields: [patientId], references: [id])
-  doctor        Doctor         @relation(fields: [doctorId], references: [id])
-  pharmacy      Pharmacy       @relation(fields: [pharmacyId], references: [id])
-  chamber       Chamber        @relation(fields: [chamberId], references: [id])
-  medicalRecord MedicalRecord?
-}
-
-model MedicalRecord {
-  id            String   @id @default(cuid())
-  appointmentId String   @unique
-  patientId     String
-  doctorId      String
-  diagnosis     String
-  prescription  String
-  notes         String?
-  createdAt     DateTime @default(now())
-
-  appointment Appointment @relation(fields: [appointmentId], references: [id])
-  patient     Patient     @relation(fields: [patientId], references: [id])
-  doctor      Doctor      @relation(fields: [doctorId], references: [id])
+  WEEKLY_RECURRING
+  MONTHLY_SPECIFIC
+  CUSTOM_DATES
+  MULTI_WEEKLY
 }
 
 enum AppointmentStatus {

@@ -1,4 +1,3 @@
-//@ts-nocheck
 "use server";
 
 import { z } from "zod";
@@ -6,14 +5,15 @@ import prisma from "@/lib/prisma";
 import { generateIdFromEntropySize } from "lucia";
 import { hash } from "@node-rs/argon2";
 import { cookies } from "next/headers";
-import { patientSchema, doctorSchema, pharmacySchema } from "./schemas";
+import { patientSchema } from "./schemas";
 import { lucia } from "@/lib/auth";
 
+// Simplified registration schema
 const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   role: z.enum(["PATIENT", "DOCTOR", "PHARMACY"]),
-  profile: z.union([patientSchema, doctorSchema, pharmacySchema]),
+  profile: patientSchema, // All user types now use the same simplified profile
 });
 
 export async function register(formData: FormData) {
@@ -31,7 +31,8 @@ export async function register(formData: FormData) {
   const { email, password, role, profile } = result.data;
 
   try {
-    const existingUser = await prisma.user.findUnique({
+    // Check if user exists with email
+    const existingUser = await prisma.user.findFirst({
       where: { email },
     });
 
@@ -49,24 +50,26 @@ export async function register(formData: FormData) {
     const userId = generateIdFromEntropySize(10);
 
     await prisma.$transaction(async (tx) => {
+      // Create user
       await tx.user.create({
         data: {
           id: userId,
           email,
+          phone: profile.phone || null,
           hashedPassword,
           role,
         },
       });
 
+      // Create profile based on role
       switch (role) {
         case "PATIENT":
           await tx.patient.create({
             data: {
               userId,
-              ...profile,
-              dateOfBirth: new Date(
-                profile.dateOfBirth.split("-").reverse().join("-")
-              ),
+              name: profile.name,
+              phone: profile.phone || null,
+              address: profile.address || null,
             },
           });
           break;
@@ -74,8 +77,9 @@ export async function register(formData: FormData) {
           await tx.doctor.create({
             data: {
               userId,
-              ...profile,
-              documents: profile.documents,
+              name: profile.name,
+              phone: profile.phone || null,
+              address: profile.address || null,
             },
           });
           break;
@@ -83,15 +87,16 @@ export async function register(formData: FormData) {
           await tx.pharmacy.create({
             data: {
               userId,
-              ...profile,
-              location: profile.location,
-              documents: profile.documents,
+              name: profile.name,
+              phone: profile.phone || null,
+              address: profile.address || null,
             },
           });
           break;
       }
     });
 
+    // Create session
     const session = await lucia.createSession(userId, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
     (await cookies()).set(

@@ -35,19 +35,19 @@ export async function GET(request: NextRequest) {
             p.*,
             ${Prisma.sql`
               6371 * acos(
-                cos(radians(${lat})) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
-                cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon})) +
-                sin(radians(${lat})) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
+                cos(radians(${lat}::float)) * cos(radians(CAST(p.location->>'latitude' AS FLOAT))) *
+                cos(radians(CAST(p.location->>'longitude' AS FLOAT)) - radians(${lon}::float)) +
+                sin(radians(${lat}::float)) * sin(radians(CAST(p.location->>'latitude' AS FLOAT)))
               )
             `} as distance
           FROM "Pharmacy" p
           WHERE 
-            p.name ILIKE ${`%${query}%`} OR
-            p."businessName" ILIKE ${`%${query}%`} OR
-            p.address ILIKE ${`%${query}%`}
+            p.name ILIKE ${`%${query}%`}::text OR
+            p."businessName" ILIKE ${`%${query}%`}::text OR
+            p.address ILIKE ${`%${query}%`}::text
           ORDER BY distance ASC
-          LIMIT ${ITEMS_PER_PAGE}
-          OFFSET ${skip}
+          LIMIT ${ITEMS_PER_PAGE}::int
+          OFFSET ${skip}::int
         )
         SELECT * FROM PharmaciesWithDistance;
       `;
@@ -56,9 +56,9 @@ export async function GET(request: NextRequest) {
         SELECT COUNT(*) as total
         FROM "Pharmacy" p
         WHERE 
-          p.name ILIKE ${`%${query}%`} OR
-          p."businessName" ILIKE ${`%${query}%`} OR
-          p.address ILIKE ${`%${query}%`}
+          p.name ILIKE ${`%${query}%`}::text OR
+          p."businessName" ILIKE ${`%${query}%`}::text OR
+          p.address ILIKE ${`%${query}%`}::text
       `;
 
       pharmacies = result;
