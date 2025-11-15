@@ -18,6 +18,7 @@ import {
 import React from "react";
 import Link from "next/link";
 import UserButton from "@/components/UserButton";
+import { BannerCarousel } from "@/components/banners/banner-carousel";
 
 export default async function DashboardPage() {
   const { user } = await validateRequest();
@@ -85,14 +86,9 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Added medical banner image */}
-          <div className="mt-6 relative h-32 bg-white/10 rounded-2xl backdrop-blur-sm overflow-hidden">
-            <img
-              src="https://images.pod.co/AknvprdAKX7_ydhDXaMCqBOoFXh0I8LL10oyzOntUHQ/resize:fill:1400:1400/plain/artwork/26765354-aeab-4bc6-a4ce-b3e5c5d00036/my-diet-counsellor/how-to-stay-healthy-5-tips-to-stay-healthy.jpg"
-              alt="Medical Banner"
-              className="w-full h-full  object-cover opacity-80"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/40 to-transparent"></div>
+          {/* Banner Carousel */}
+          <div className="mt-6">
+            <BannerCarousel role={user.role} height="h-32" />
           </div>
         </div>
       </div>

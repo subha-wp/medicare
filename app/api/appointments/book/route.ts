@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { isPremiumMember, calculateFinalAmount } from "@/lib/premium";
 
 const appointmentSchema = z.object({
   chamberId: z.string(),
@@ -79,10 +80,25 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check premium status and calculate final amount
+    const patient = await prisma.patient.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!patient) {
+      return NextResponse.json(
+        { error: "Patient profile not found" },
+        { status: 404 }
+      );
+    }
+
+    const premium = await isPremiumMember(patient.id);
+    const finalAmount = calculateFinalAmount(chamber.fees, premium);
+
     // Create the appointment
     const appointment = await prisma.appointment.create({
       data: {
-        patientId: user.id,
+        patientId: patient.id,
         doctorId: chamber.doctorId,
         pharmacyId: chamber.pharmacyId,
         chamberId: chamber.id,
@@ -91,7 +107,7 @@ export async function POST(request: Request) {
         status: "PENDING",
         paymentStatus: "PENDING",
         paymentMethod,
-        amount: chamber.fees,
+        amount: finalAmount,
       },
     });
 

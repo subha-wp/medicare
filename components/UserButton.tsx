@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Check,
@@ -13,6 +13,7 @@ import {
   UserIcon,
   Settings,
   ChevronRight,
+  Crown,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -26,6 +27,7 @@ import {
 } from "./ui/drawer";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
+import { Badge } from "./ui/badge";
 import UserAvatar from "./UserAvatar";
 import { useSession } from "@/app/dashboard/SessionProvider";
 import { logout } from "@/app/auth/actions";
@@ -38,6 +40,72 @@ export default function UserButton({ className }: UserButtonProps) {
   const { user } = useSession();
   const { theme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [membershipStatus, setMembershipStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchUserProfile();
+      if (user?.role === "PATIENT") {
+        fetchPremiumStatus();
+      }
+    }
+  }, [user?.role, isOpen]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch("/api/user/profile");
+      if (response.ok) {
+        const data = await response.json();
+        let name = "User";
+        if (data.profile) {
+          switch (user?.role) {
+            case "PATIENT":
+              name = data.profile.name || "User";
+              break;
+            case "DOCTOR":
+              name = data.profile.name || "User";
+              break;
+            case "PHARMACY":
+              name = data.profile.businessName || data.profile.name || "User";
+              break;
+          }
+        }
+        setUserName(name);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      setUserName("User");
+    }
+  };
+
+  const fetchPremiumStatus = async () => {
+    try {
+      const response = await fetch("/api/premium/status");
+      const data = await response.json();
+      const premium = data.isPremium || false;
+      setIsPremium(premium);
+      
+      if (premium && data.membership) {
+        const endDate = new Date(data.membership.endDate);
+        const now = new Date();
+        const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysRemaining > 0) {
+          setMembershipStatus(`${daysRemaining} days remaining`);
+        } else {
+          setMembershipStatus("Expired");
+        }
+      } else {
+        setMembershipStatus(null);
+      }
+    } catch (error) {
+      console.error("Error fetching premium status:", error);
+      setIsPremium(false);
+      setMembershipStatus(null);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -85,21 +153,49 @@ export default function UserButton({ className }: UserButtonProps) {
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
-        <button className={cn("flex-none rounded-full", className)}>
+        <button className={cn("flex-none rounded-full relative", className)}>
           <UserAvatar avatarUrl={user.avatarUrl} size={40} />
+          {user?.role === "PATIENT" && isPremium && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white">
+              <Crown className="w-3 h-3 text-white" />
+            </div>
+          )}
         </button>
       </DrawerTrigger>
       <DrawerContent className="max-h-[85vh]">
         <DrawerHeader className="pb-4">
           <div className="flex items-center space-x-4 px-2">
-            <UserAvatar avatarUrl={user.avatarUrl} size={60} />
+            <div className="relative">
+              <UserAvatar avatarUrl={user.avatarUrl} size={60} />
+              {user?.role === "PATIENT" && isPremium && (
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white">
+                  <Crown className="w-3.5 h-3.5 text-white" />
+                </div>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
-              <DrawerTitle className="text-lg font-semibold text-gray-900 truncate">
-                {user.email}
+              <DrawerTitle className="text-xl font-bold text-gray-900 truncate mb-1 text-left">
+                {userName || "User"}
               </DrawerTitle>
-              <p className="text-sm text-gray-500 capitalize">
-                {user.role?.toLowerCase() || 'User'}
-              </p>
+              {user?.role === "PATIENT" && (
+                <div className="flex items-center gap-2 mt-1">
+                  {isPremium ? (
+                    <Badge variant="secondary" className="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-200 text-xs font-medium">
+                      <Crown className="w-3 h-3 mr-1" />
+                      Premium {membershipStatus && `• ${membershipStatus}`}
+                    </Badge>
+                  ) : (
+                    <span className="text-xs text-gray-500 font-medium">
+                      Free Plan
+                    </span>
+                  )}
+                </div>
+              )}
+              {user?.role !== "PATIENT" && (
+                <span className="text-xs text-gray-500 font-medium capitalize">
+                  {user.role?.toLowerCase() || 'User'}
+                </span>
+              )}
             </div>
           </div>
         </DrawerHeader>
@@ -112,6 +208,20 @@ export default function UserButton({ className }: UserButtonProps) {
               label="Profile"
               href="/dashboard/settings"
             />
+            {user?.role === "PATIENT" && (
+              <MenuItem
+                icon={Crown}
+                label="Premium"
+                href="/dashboard/premium"
+                rightElement={
+                  isPremium ? (
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">
+                      Active
+                    </Badge>
+                  ) : undefined
+                }
+              />
+            )}
           </div>
 
           <Separator className="my-4" />

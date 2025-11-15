@@ -22,6 +22,7 @@ import {
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import UserAvatar from "../UserAvatar";
 import { Badge } from "../ui/badge";
+import { Crown } from "lucide-react";
 
 type Chamber = {
   id: string;
@@ -156,6 +157,7 @@ export function AppointmentDrawer({
   const [slotAvailability, setSlotAvailability] = useState<
     Record<string, number>
   >({});
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     if (chamber && open) {
@@ -165,8 +167,22 @@ export function AppointmentDrawer({
 
       // Fetch slot availability for all dates
       dates.forEach(fetchSlotAvailability);
+      
+      // Fetch premium status
+      fetchPremiumStatus();
     }
   }, [chamber, open]);
+
+  const fetchPremiumStatus = async () => {
+    try {
+      const response = await fetch("/api/premium/status");
+      const data = await response.json();
+      setIsPremium(data.isPremium || false);
+    } catch (error) {
+      console.error("Error fetching premium status:", error);
+      setIsPremium(false);
+    }
+  };
 
   const fetchSlotAvailability = async (date: Date) => {
     if (!chamber) return;
@@ -347,8 +363,27 @@ export function AppointmentDrawer({
               )}
 
               <div>
-                <h4 className="font-medium">Consultation Fee</h4>
-                <p className="text-sm text-muted-foreground">₹{chamber.fees}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="font-medium">Consultation Fee</h4>
+                  {isPremium && (
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                      <Crown className="w-3 h-3 mr-1" />
+                      Premium
+                    </Badge>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  {isPremium ? (
+                    <>
+                      <p className="text-sm text-muted-foreground line-through">₹{chamber.fees}</p>
+                      <p className="text-lg font-semibold text-green-600">
+                        ₹{Math.round(chamber.fees * 0.9)} <span className="text-xs text-green-600">(10% off)</span>
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">₹{chamber.fees}</p>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">

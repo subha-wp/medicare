@@ -11,6 +11,7 @@ import {
   Briefcase,
   Building,
   Settings,
+  Crown,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -54,6 +55,12 @@ const sidebarItems: SidebarItem[] = [
     title: "Medical Reports",
     icon: FileText,
     href: "/dashboard/medical-reports",
+    role: "PATIENT",
+  },
+  {
+    title: "Premium",
+    icon: Crown,
+    href: "/dashboard/premium",
     role: "PATIENT",
   },
 

@@ -72,6 +72,7 @@ model Patient {
   appointments   Appointment[]
   medicalRecords MedicalRecord[]
   user           User            @relation(fields: [userId], references: [id])
+  premiumMembership PremiumMembership?
 }
 
 model Doctor {
@@ -234,4 +235,85 @@ enum WeekDay {
   FRIDAY
   SATURDAY
   SUNDAY
+}
+
+model PremiumMembership {
+  id                String                @id @default(cuid())
+  patientId         String                @unique
+  planType          PremiumPlanType
+  status            PremiumStatus         @default(ACTIVE)
+  startDate         DateTime              @default(now())
+  endDate           DateTime
+  autoRenew         Boolean               @default(true)
+  cancelledAt       DateTime?
+  cancellationReason String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  patient           Patient               @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  payments          PremiumPayment[]
+
+  @@index([status])
+  @@index([endDate])
+}
+
+model PremiumPayment {
+  id                  String            @id @default(cuid())
+  membershipId        String
+  amount              Float
+  paymentMethod       PaymentMethod
+  paymentStatus       PaymentStatus     @default(PENDING)
+  transactionId       String?           @unique
+  paymentGateway      String?
+  gatewayResponse     Json?
+  paidAt              DateTime?
+  refundedAt          DateTime?
+  refundAmount        Float?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  membership          PremiumMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@index([paymentStatus])
+  @@index([transactionId])
+}
+
+enum PremiumPlanType {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  LIFETIME
+}
+
+enum PremiumStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PENDING
+}
+
+model Banner {
+  id          String    @id @default(cuid())
+  title       String?
+  description String?
+  imageUrl    String
+  linkUrl     String?
+  isActive    Boolean   @default(true)
+  displayOrder Int      @default(0)
+  targetAudience BannerAudience @default(ALL)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@index([targetAudience])
+}
+
+enum BannerAudience {
+  ALL
+  PATIENT
+  DOCTOR
+  PHARMACY
 }

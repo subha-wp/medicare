@@ -16,6 +16,7 @@ import {
   Shield,
   AlertTriangle,
   FileText,
+  Phone,
 } from "lucide-react";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
@@ -43,6 +44,7 @@ type Chamber = {
     name: string;
     address: string;
     businessName: string;
+    phone?: string | null;
     location: {
       latitude: number;
       longitude: number;
@@ -160,6 +162,23 @@ export function ChamberList() {
   const handleBookAppointment = (chamber: Chamber) => {
     setSelectedChamber(chamber);
     setDrawerOpen(true);
+  };
+
+  const handleCallPharmacy = (phone: string | null | undefined) => {
+    if (!phone) return;
+    
+    if (window.ReactNativeWebView) {
+      // We're in the WebView, send a message to the native app
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify({
+          type: "phoneCall",
+          phone: phone,
+        })
+      );
+    } else {
+      // We're in a regular browser, use the default behavior
+      window.location.href = `tel:${phone}`;
+    }
   };
 
   function formatTime(time: string): string {
@@ -377,7 +396,17 @@ export function ChamberList() {
                   </div>
                 </div>
 
-                {/* Book Button */}
+                {/* Action Buttons */}
+                {chamber.pharmacy?.phone && (
+                  <Button
+                    variant="outline"
+                    className="w-full border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 bg-transparent"
+                    onClick={() => handleCallPharmacy(chamber.pharmacy?.phone)}
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Call Pharmacy
+                  </Button>
+                )}
                 {userRole === "PATIENT" && chamber.isVerified && (
                   <Button
                     className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-sm transition-colors duration-200"

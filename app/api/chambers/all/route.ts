@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
             p.address, 
             p."businessName", 
             p.location,
+            p.phone as "pharmacyPhone",
             (
               6371 * acos(
                 LEAST(1.0,
@@ -119,7 +120,8 @@ export async function GET(request: NextRequest) {
             'name', "pharmacyName",
             'address', address,
             'businessName', "businessName",
-            'location', location
+            'location', location,
+            'phone', "pharmacyPhone"
           ) as pharmacy,
           distance
         FROM FilteredChambers
@@ -223,6 +225,7 @@ export async function GET(request: NextRequest) {
                 address: true,
                 location: true,
                 businessName: true,
+                phone: true,
               },
             },
           },
