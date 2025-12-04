@@ -15,4 +15,5 @@ export const pharmacySchema = baseProfileSchema;
 export const baseSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
+  referralCode: z.string().optional(),
 });

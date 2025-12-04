@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { User, Mail, Lock, Phone, MapPin } from "lucide-react";
+import { User, Mail, Lock, Phone, MapPin, Gift } from "lucide-react";
 
 interface BaseFieldsProps {
   form: UseFormReturn<any>;
@@ -137,6 +137,33 @@ export function BaseFields({ form }: BaseFieldsProps) {
               </div>
             </FormControl>
             <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Referral Code Field - Optional */}
+      <FormField
+        control={form.control}
+        name="referralCode"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-medium text-gray-700">
+              Referral Code (Optional)
+            </FormLabel>
+            <FormControl>
+              <div className="relative">
+                <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  {...field}
+                  placeholder="Enter referral code to get ₹50 credit"
+                  className="pl-10 h-12 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </FormControl>
+            <FormMessage />
+            <p className="text-xs text-gray-500">
+              Get ₹50 credit when you book your first appointment
+            </p>
           </FormItem>
         )}
       />

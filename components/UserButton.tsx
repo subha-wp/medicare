@@ -14,6 +14,9 @@ import {
   Settings,
   ChevronRight,
   Crown,
+  Gift,
+  Share2,
+  TrendingUp,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -43,6 +46,11 @@ export default function UserButton({ className }: UserButtonProps) {
   const [isPremium, setIsPremium] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [membershipStatus, setMembershipStatus] = useState<string | null>(null);
+  const [referralStats, setReferralStats] = useState<{
+    code: string;
+    usedCount: number;
+    totalEarnings: number;
+  } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -50,6 +58,7 @@ export default function UserButton({ className }: UserButtonProps) {
       if (user?.role === "PATIENT") {
         fetchPremiumStatus();
       }
+      fetchReferralStats();
     }
   }, [user?.role, isOpen]);
 
@@ -104,6 +113,24 @@ export default function UserButton({ className }: UserButtonProps) {
       console.error("Error fetching premium status:", error);
       setIsPremium(false);
       setMembershipStatus(null);
+    }
+  };
+
+  const fetchReferralStats = async () => {
+    try {
+      const response = await fetch("/api/referrals/stats");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.stats) {
+          setReferralStats({
+            code: data.stats.code,
+            usedCount: data.stats.usedCount || 0,
+            totalEarnings: data.stats.totalEarnings || 0,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching referral stats:", error);
     }
   };
 
@@ -226,46 +253,98 @@ export default function UserButton({ className }: UserButtonProps) {
 
           <Separator className="my-4" />
 
-          {/* Theme Section */}
+          {/* Referral Program Highlight */}
           <div className="space-y-1">
-            <div className="py-2 px-1">
-              <div className="flex items-center space-x-3 mb-3">
-                <Monitor className="w-5 h-5 text-gray-600" />
-                <span className="text-base font-medium text-gray-900">Theme</span>
+            <Link 
+              href="/dashboard/referrals" 
+              onClick={() => setIsOpen(false)}
+              className="block"
+            >
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 hover:border-green-300 transition-colors">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                      <Gift className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm">Referral Program</h3>
+                      <p className="text-xs text-gray-600">Earn rewards by sharing</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 mt-1" />
+                </div>
+                
+                {referralStats ? (
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="bg-white/60 rounded-lg p-2">
+                      <div className="flex items-center space-x-1 mb-1">
+                        <Share2 className="w-3 h-3 text-green-600" />
+                        <span className="text-xs text-gray-600">Referrals</span>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900">{referralStats.usedCount}</p>
+                    </div>
+                    <div className="bg-white/60 rounded-lg p-2">
+                      <div className="flex items-center space-x-1 mb-1">
+                        <TrendingUp className="w-3 h-3 text-green-600" />
+                        <span className="text-xs text-gray-600">Earnings</span>
+                      </div>
+                      <p className="text-lg font-bold text-gray-900">₹{referralStats.totalEarnings}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3">
+                    <div className="bg-white/60 rounded-lg p-3 text-center">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Get your referral code</p>
+                      <p className="text-xs text-gray-500">Start earning rewards today!</p>
+                    </div>
+                  </div>
+                )}
+                
+                {referralStats?.code && (
+                  <div className="mt-3 pt-3 border-t border-green-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 font-medium">Your Code:</span>
+                      <span className="text-sm font-bold text-green-700 tracking-wider">{referralStats.code}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="space-y-2 ml-8">
-                <button
-                  onClick={() => setTheme("system")}
-                  className="flex items-center justify-between w-full py-2 px-2 rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Monitor className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">System default</span>
-                  </div>
-                  {theme === "system" && <Check className="w-4 h-4 text-green-600" />}
-                </button>
-                <button
-                  onClick={() => setTheme("light")}
-                  className="flex items-center justify-between w-full py-2 px-2 rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Sun className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">Light</span>
-                  </div>
-                  {theme === "light" && <Check className="w-4 h-4 text-green-600" />}
-                </button>
-                <button
-                  onClick={() => setTheme("dark")}
-                  className="flex items-center justify-between w-full py-2 px-2 rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Moon className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm text-gray-700">Dark</span>
-                  </div>
-                  {theme === "dark" && <Check className="w-4 h-4 text-green-600" />}
-                </button>
+            </Link>
+          </div>
+
+          <Separator className="my-4" />
+
+          {/* Theme Toggle */}
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                const themes = ["light", "dark", "system"];
+                const currentIndex = themes.indexOf(theme || "system");
+                const nextIndex = (currentIndex + 1) % themes.length;
+                setTheme(themes[nextIndex] as "light" | "dark" | "system");
+              }}
+              className="flex items-center justify-between w-full py-3 px-1 hover:bg-gray-50 active:bg-gray-100 rounded-lg transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                {theme === "light" && <Sun className="w-5 h-5 text-yellow-500" />}
+                {theme === "dark" && <Moon className="w-5 h-5 text-blue-600" />}
+                {(theme === "system" || !theme) && <Monitor className="w-5 h-5 text-gray-600" />}
+                <span className="text-base font-medium text-gray-900">
+                  {theme === "light" ? "Light" : theme === "dark" ? "Dark" : "System"}
+                </span>
               </div>
-            </div>
+              <div className={cn(
+                "relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ease-in-out focus-within:outline-none focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-offset-2",
+                theme === "dark" ? "bg-gray-700" : theme === "light" ? "bg-yellow-400" : "bg-gray-400"
+              )}>
+                <span
+                  className={cn(
+                    "inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out",
+                    theme === "dark" ? "translate-x-6" : theme === "light" ? "translate-x-1" : "translate-x-3.5"
+                  )}
+                />
+              </div>
+            </button>
           </div>
 
           <Separator className="my-4" />

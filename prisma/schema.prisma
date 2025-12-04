@@ -62,60 +62,64 @@ model Session {
 }
 
 model Patient {
-  id             String          @id @default(cuid())
-  userId         String          @unique
-  name           String
-  phone          String?
-  address        String?
-  dateOfBirth    DateTime?
-  bloodGroup     String?
-  appointments   Appointment[]
-  medicalRecords MedicalRecord[]
-  user           User            @relation(fields: [userId], references: [id])
+  id                String             @id @default(cuid())
+  userId            String             @unique
+  name              String
+  phone             String?
+  address           String?
+  dateOfBirth       DateTime?
+  bloodGroup        String?
+  appointments      Appointment[]
+  medicalRecords    MedicalRecord[]
+  user              User               @relation(fields: [userId], references: [id])
   premiumMembership PremiumMembership?
+  referredBy        ReferralReward[]   @relation("ReferredPatient")
+  referralRewards   ReferralReward[]   @relation("ReferrerPatient")
 }
 
 model Doctor {
-  id                String          @id @default(cuid())
-  userId            String          @unique
+  id                String           @id @default(cuid())
+  userId            String           @unique
   name              String
   phone             String?
   specialization    String?
   qualification     String?
   experience        Int?
   about             String?
-  licenseNo         String?         @unique
-  aadhaarNo         String?         @unique
+  licenseNo         String?          @unique
+  aadhaarNo         String?          @unique
   documents         Json?
   address           String?
   avatarUrl         String?
-  createdAt         DateTime        @default(now())
+  createdAt         DateTime         @default(now())
   consultationFee   Float?
-  isVerified        Boolean         @default(false)
+  isVerified        Boolean          @default(false)
   verificationDate  DateTime?
   verificationNotes String?
   appointments      Appointment[]
   chambers          Chamber[]
-  user              User            @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id])
   medicalRecords    MedicalRecord[]
+  referralRewards   ReferralReward[] @relation("ReferrerDoctor")
 }
 
 model Pharmacy {
-  id           String        @id @default(cuid())
-  userId       String        @unique
-  name         String
-  businessName String?
-  phone        String?
-  address      String?
-  location     Json?
-  gstin        String?
-  tradeLicense String?
-  documents    Json?
-  avatarUrl    String?
-  createdAt    DateTime      @default(now())
-  appointments Appointment[]
-  chambers     Chamber[]
-  user         User          @relation(fields: [userId], references: [id])
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  name            String
+  businessName    String?
+  phone           String?
+  address         String?
+  location        Json?
+  gstin           String?
+  tradeLicense    String?
+  documents       Json?
+  avatarUrl       String?
+  createdAt       DateTime         @default(now())
+  appointments    Appointment[]
+  chambers        Chamber[]
+  user            User             @relation(fields: [userId], references: [id])
+  referralRewards ReferralReward[] @relation("ReferrerPharmacy")
 }
 
 model Chamber {
@@ -144,23 +148,24 @@ model Chamber {
 }
 
 model Appointment {
-  id            String            @id @default(cuid())
-  patientId     String
-  doctorId      String
-  pharmacyId    String
-  chamberId     String
-  date          DateTime
-  status        AppointmentStatus @default(PENDING)
-  paymentStatus PaymentStatus     @default(PENDING)
-  paymentMethod PaymentMethod
-  amount        Float
-  createdAt     DateTime          @default(now())
-  slotNumber    Int
-  chamber       Chamber           @relation(fields: [chamberId], references: [id])
-  doctor        Doctor            @relation(fields: [doctorId], references: [id])
-  patient       Patient           @relation(fields: [patientId], references: [id])
-  pharmacy      Pharmacy          @relation(fields: [pharmacyId], references: [id])
-  medicalRecord MedicalRecord?
+  id               String            @id @default(cuid())
+  patientId        String
+  doctorId         String
+  pharmacyId       String
+  chamberId        String
+  date             DateTime
+  status           AppointmentStatus @default(PENDING)
+  paymentStatus    PaymentStatus     @default(PENDING)
+  paymentMethod    PaymentMethod
+  amount           Float
+  createdAt        DateTime          @default(now())
+  slotNumber       Int
+  referralCodeUsed String?
+  chamber          Chamber           @relation(fields: [chamberId], references: [id])
+  doctor           Doctor            @relation(fields: [doctorId], references: [id])
+  patient          Patient           @relation(fields: [patientId], references: [id])
+  pharmacy         Pharmacy          @relation(fields: [pharmacyId], references: [id])
+  medicalRecord    MedicalRecord?
 }
 
 model MedicalRecord {
@@ -238,39 +243,39 @@ enum WeekDay {
 }
 
 model PremiumMembership {
-  id                String                @id @default(cuid())
-  patientId         String                @unique
-  planType          PremiumPlanType
-  status            PremiumStatus         @default(ACTIVE)
-  startDate         DateTime              @default(now())
-  endDate           DateTime
-  autoRenew         Boolean               @default(true)
-  cancelledAt       DateTime?
+  id                 String           @id @default(cuid())
+  patientId          String           @unique
+  planType           PremiumPlanType
+  status             PremiumStatus    @default(ACTIVE)
+  startDate          DateTime         @default(now())
+  endDate            DateTime
+  autoRenew          Boolean          @default(true)
+  cancelledAt        DateTime?
   cancellationReason String?
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  patient           Patient               @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  payments          PremiumPayment[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  patient            Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  payments           PremiumPayment[]
 
   @@index([status])
   @@index([endDate])
 }
 
 model PremiumPayment {
-  id                  String            @id @default(cuid())
-  membershipId        String
-  amount              Float
-  paymentMethod       PaymentMethod
-  paymentStatus       PaymentStatus     @default(PENDING)
-  transactionId       String?           @unique
-  paymentGateway      String?
-  gatewayResponse     Json?
-  paidAt              DateTime?
-  refundedAt          DateTime?
-  refundAmount        Float?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  membership          PremiumMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  id              String            @id @default(cuid())
+  membershipId    String
+  amount          Float
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus     @default(PENDING)
+  transactionId   String?           @unique
+  paymentGateway  String?
+  gatewayResponse Json?
+  paidAt          DateTime?
+  refundedAt      DateTime?
+  refundAmount    Float?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  membership      PremiumMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
 
   @@index([paymentStatus])
   @@index([transactionId])
@@ -291,20 +296,20 @@ enum PremiumStatus {
 }
 
 model Banner {
-  id          String    @id @default(cuid())
-  title       String?
-  description String?
-  imageUrl    String
-  linkUrl     String?
-  isActive    Boolean   @default(true)
-  displayOrder Int      @default(0)
+  id             String         @id @default(cuid())
+  title          String?
+  description    String?
+  imageUrl       String
+  linkUrl        String?
+  isActive       Boolean        @default(true)
+  displayOrder   Int            @default(0)
   targetAudience BannerAudience @default(ALL)
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  createdBy   String?
-  updatedBy   String?
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  createdBy      String?
+  updatedBy      String?
 
   @@index([isActive])
   @@index([displayOrder])
@@ -316,4 +321,88 @@ enum BannerAudience {
   PATIENT
   DOCTOR
   PHARMACY
+}
+
+model ReferralCode {
+  id            String           @id @default(cuid())
+  code          String           @unique
+  userId        String           @unique
+  userRole      UserRole
+  usedCount     Int              @default(0)
+  totalEarnings Float            @default(0)
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  rewards       ReferralReward[]
+
+  @@index([code])
+  @@index([userId])
+}
+
+model ReferralReward {
+  id               String             @id @default(cuid())
+  referrerId       String
+  referrerType     UserRole
+  referredId       String?
+  referredType     UserRole?
+  rewardType       ReferralRewardType
+  rewardAmount     Float
+  status           RewardStatus       @default(PENDING)
+  appointmentId    String?
+  referralCodeId   String
+  referralCode     ReferralCode       @relation(fields: [referralCodeId], references: [id])
+  referrerPatient  Patient?           @relation("ReferrerPatient", fields: [referrerId], references: [id], map: "ReferralReward_referrerPatient_fkey")
+  referredPatient  Patient?           @relation("ReferredPatient", fields: [referredId], references: [id], map: "ReferralReward_referredPatient_fkey")
+  referrerDoctor   Doctor?            @relation("ReferrerDoctor", fields: [referrerId], references: [id], map: "ReferralReward_referrerDoctor_fkey")
+  referrerPharmacy Pharmacy?          @relation("ReferrerPharmacy", fields: [referrerId], references: [id], map: "ReferralReward_referrerPharmacy_fkey")
+  transaction      RewardTransaction?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([referrerId])
+  @@index([referredId])
+  @@index([status])
+  @@index([appointmentId])
+}
+
+model RewardTransaction {
+  id              String            @id @default(cuid())
+  rewardId        String            @unique
+  reward          ReferralReward    @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  amount          Float
+  transactionType TransactionType
+  status          TransactionStatus @default(PENDING)
+  transactionId   String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([status])
+}
+
+enum ReferralRewardType {
+  PATIENT_REFERS_PATIENT
+  DOCTOR_REFERS_PATIENT
+  PHARMACY_REFERS_DOCTOR
+  FIRST_REFERRAL_BONUS
+}
+
+enum RewardStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
 }

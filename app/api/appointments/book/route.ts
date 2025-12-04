@@ -10,6 +10,7 @@ const appointmentSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
   slotNumber: z.number().int().positive(),
   paymentMethod: z.enum(["ONLINE", "CASH"]),
+  referralCode: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { chamberId, date, slotNumber, paymentMethod } = result.data;
+  const { chamberId, date, slotNumber, paymentMethod, referralCode } = result.data;
 
   try {
     // Check if the chamber exists and is active
@@ -95,6 +96,17 @@ export async function POST(request: Request) {
     const premium = await isPremiumMember(patient.id);
     const finalAmount = calculateFinalAmount(chamber.fees, premium);
 
+    // Validate referral code if provided
+    let validReferralCode = null;
+    if (referralCode) {
+      const referralCodeRecord = await prisma.referralCode.findUnique({
+        where: { code: referralCode },
+      });
+      if (referralCodeRecord && referralCodeRecord.isActive) {
+        validReferralCode = referralCode;
+      }
+    }
+
     // Create the appointment
     const appointment = await prisma.appointment.create({
       data: {
@@ -108,6 +120,7 @@ export async function POST(request: Request) {
         paymentStatus: "PENDING",
         paymentMethod,
         amount: finalAmount,
+        referralCodeUsed: validReferralCode,
       },
     });
 

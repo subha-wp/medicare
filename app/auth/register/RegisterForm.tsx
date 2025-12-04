@@ -35,13 +35,16 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
 
   // All user types now use the same simplified schema
-  const schema = baseSchema.merge(z.object({ profile: patientSchema }));
+  const schema = baseSchema.merge(z.object({ profile: patientSchema, referralCode: z.string().optional() }));
+
+  const referralCodeFromUrl = searchParams.get("ref") || "";
 
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       email: "",
       password: "",
+      referralCode: referralCodeFromUrl,
       profile: {
         name: "",
         phone: "",
@@ -58,6 +61,9 @@ export default function RegisterForm() {
       formData.append("password", values.password);
       formData.append("role", role);
       formData.append("profile", JSON.stringify(values.profile));
+      if (values.referralCode) {
+        formData.append("referralCode", values.referralCode);
+      }
 
       const result = await register(formData);
 

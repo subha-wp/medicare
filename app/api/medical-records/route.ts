@@ -55,10 +55,20 @@ export async function POST(request: Request) {
     });
 
     // Update appointment status to completed
-    await prisma.appointment.update({
+    const updatedAppointment = await prisma.appointment.update({
       where: { id: appointment.id },
-      data: { status: "COMPLETED" },
+      data: { status: "COMPLETED", paymentStatus: "PAID" },
     });
+
+    // Process referral rewards if referral code was used
+    if (updatedAppointment.referralCodeUsed) {
+      const { processAppointmentReferral } = await import("@/lib/referral");
+      await processAppointmentReferral(
+        updatedAppointment.id,
+        updatedAppointment.patientId,
+        updatedAppointment.doctorId
+      );
+    }
 
     return NextResponse.json(medicalRecord);
   } catch (error) {
